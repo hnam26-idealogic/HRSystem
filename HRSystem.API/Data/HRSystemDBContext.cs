@@ -74,6 +74,11 @@ namespace HRSystem.API.Data
                 .HasForeignKey(i => i.CandidateId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Unique index for Interview: CandidateId + Job + InterviewerId
+            modelBuilder.Entity<Interview>()
+                .HasIndex(i => new { i.CandidateId, i.Job, i.InterviewerId })
+                .IsUnique();
+
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 // Apply a global query filter to exclude soft-deleted entities
