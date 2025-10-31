@@ -4,6 +4,7 @@ using HRSystem.API.Models.DTO;
 using HRSystem.API.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using HRSystem.API.CustomActionFilters;
 
 namespace HRSystem.API.Controllers
 {
@@ -36,6 +37,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpPost]
+        [ValidateModel]
         public async Task<IActionResult> Add([FromBody] AddInterviewRequestDto addInterviewRequestDto)
         {
             var interviewEntity = mapper.Map<Interview>(addInterviewRequestDto);
@@ -45,6 +47,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
+        [ValidateModel]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInterviewRequestDto updateInterviewRequestDto)
         {
             var interviewEntity = mapper.Map<Interview>(updateInterviewRequestDto);

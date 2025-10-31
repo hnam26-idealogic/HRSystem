@@ -44,6 +44,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpPost]
+        [ValidateModel]
         public async Task<IActionResult> Add([FromBody] AddUserRequestDto addUserRequestDto)
         {
             var userEntity = mapper.Map<User>(addUserRequestDto);
@@ -53,6 +54,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
+        [ValidateModel]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateUserRequestDto updateUserRequestDto)
         {
             var userEntity = mapper.Map<User>(updateUserRequestDto);

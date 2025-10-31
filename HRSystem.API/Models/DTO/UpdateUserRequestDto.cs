@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 public class UpdateUserRequestDto
 {
-    [Required]
     public string Fullname { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public string UserType { get; set; } = string.Empty;
