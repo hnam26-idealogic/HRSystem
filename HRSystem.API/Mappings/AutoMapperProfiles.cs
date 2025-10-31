@@ -9,7 +9,7 @@ namespace HRSystem.API.Mappings
         public AutoMapperProfiles()
         {
             CreateMap<User, UserDto>().ReverseMap();
-            CreateMap<AddUserDto, User>();
+            CreateMap<AddUserRequestDto, User>();
         }
     }
 }

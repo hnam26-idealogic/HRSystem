@@ -28,41 +28,44 @@ namespace HRSystem.API.Controllers
         {
             // logger.LogInformation("Fetching all users");
 
-            var usersDomainModel = await userRepository.GetAllAsync();
+            var users = await userRepository.GetAllAsync();
 
-            return Ok(mapper.Map<List<UserDto>>(usersDomainModel));
-
+            var userDtos = mapper.Map<List<UserDto>>(users);
+            return Ok(userDtos);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
+        [HttpGet("{id:Guid}")]
+        public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
-            var user = await userRepository.GetByIdAsync(id);
-            if (user == null) return NotFound();
-            return Ok(mapper.Map<UserDto>(user));
+            var userEntity = await userRepository.GetByIdAsync(id);
+            if (userEntity == null) return NotFound();
+            var userDto = mapper.Map<UserDto>(userEntity);
+            return Ok(userDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] AddUserDto addUserDto)
+        public async Task<IActionResult> Add([FromBody] AddUserRequestDto addUserRequestDto)
         {
-            var user = mapper.Map<User>(addUserDto);
-            var created = await userRepository.AddAsync(user, addUserDto.Password);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, mapper.Map<UserDto>(created));
+            var userEntity = mapper.Map<User>(addUserRequestDto);
+            var createdUser = await userRepository.AddAsync(userEntity, addUserRequestDto.Password);
+            var createdUserDto = mapper.Map<UserDto>(createdUser);
+            return CreatedAtAction(nameof(GetById), new { id = createdUserDto.Id }, createdUserDto);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UserDto userDto)
+        [HttpPut("{id:Guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequestDto updateUserRequestDto)
         {
-            var user = mapper.Map<User>(userDto);
-            var updated = await userRepository.UpdateAsync(id, user);
-            return Ok(mapper.Map<UserDto>(updated));
+            var userEntity = mapper.Map<User>(updateUserRequestDto);
+            var updatedUser = await userRepository.UpdateAsync(id, userEntity);
+            var updatedUserDto = mapper.Map<UpdateUserRequestDto>(updatedUser);
+            return Ok(updatedUserDto);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:Guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted = await userRepository.DeleteAsync(id);
-            if (!deleted) return NotFound();
+            var deletedUser = await userRepository.DeleteAsync(id);
+            if (!deletedUser) return NotFound();
             return NoContent();
         }
     }

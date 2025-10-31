@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HRSystem.API.Models.DTO
 {
-    public class AddUserDto
+    public class AddUserRequestDto
     {
         [Required]
         public string Fullname { get; set; } = string.Empty;
