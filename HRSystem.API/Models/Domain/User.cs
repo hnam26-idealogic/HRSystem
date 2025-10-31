@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HRSystem.API.Models.Domain
 {
-    [Index(nameof(Email), IsUnique = true)]
     public class User : IdentityUser<Guid>
     {
         [Required]
@@ -20,6 +20,7 @@ namespace HRSystem.API.Models.Domain
         public string? Specialty { get; set; }
 
         // Navigation properties
+        [NotMapped]
         public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
     }
 }

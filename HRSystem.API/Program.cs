@@ -17,6 +17,9 @@ builder.Services.AddDbContext<HRSystemDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IUserRepository, SQLUserRepository>();
+builder.Services.AddScoped<ICandidateRepository, SQLCandidateRepository>();
+builder.Services.AddScoped<IInterviewRepository, SQLInterviewRepository>();
+
 builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfiles));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
