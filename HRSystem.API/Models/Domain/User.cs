@@ -4,12 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HRSystem.API.Models.Domain
 {
-    public enum UserType
-    {
-        HR,
-        Interviewer
-    }
-
     [Index(nameof(Email), IsUnique = true)]
     public class User : IdentityUser<Guid>
     {

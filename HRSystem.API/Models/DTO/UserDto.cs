@@ -13,6 +13,5 @@ namespace HRSystem.API.Models.DTO
         public UserType UserType { get; set; }
         public string? AccessLevel { get; set; }
         public string? Specialty { get; set; }
-        public List<UserRoleDto> UserRoles { get; set; } = new();
-    }
+      }
 }

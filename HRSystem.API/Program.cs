@@ -1,6 +1,8 @@
 using HRSystem.API.Data;
 using HRSystem.API.Mappings;
+using HRSystem.API.Models.Domain;
 using HRSystem.API.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

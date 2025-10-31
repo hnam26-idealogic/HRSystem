@@ -57,6 +57,18 @@ namespace HRSystem.API.Data
 
 
             modelBuilder.Entity<Interview>()
+                .HasOne(i => i.HR)
+                .WithMany()
+                .HasForeignKey(i => i.HrId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Interview>()
+                .HasOne(i => i.Interviewer)
+                .WithMany()
+                .HasForeignKey(i => i.InterviewerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Interview>()
                 .HasOne(i => i.Candidate)
                 .WithMany(c => c.Interviews)
                 .HasForeignKey(i => i.CandidateId)
