@@ -1,0 +1,88 @@
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio files
+.vs/
+.vscode/
+*.dbmdl
+*.pdb
+*.cache
+*.log
+*.tlog
+*.vspscc
+*.vssscc
+*.psess
+*.vsp
+*.scc
+
+# Rider files
+.idea/
+*.sln.iml
+
+# ASP.NET/Entity Framework
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+
+# SQLite/Local DB
+*.mdf
+*.ldf
+*.db
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+project.lock.json
+project.assets.json
+
+# Build results
+*.dll
+*.exe
+*.js
+*.css
+*.map
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Publish results
+publish/
+out/
+dist/
+
+# Web assets
+wwwroot/static/
+wwwroot/dist/
+wwwroot/node_modules/
+
+# Logs
+*.log
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Others
+*.DS_Store
+*.swp
+*.bak
+*.tmp
+
+# Ignore uploads and other runtime folders
+HRSystem.API/Uploads/
+HRSystem.API/logs/
+HRSystem.UI/Uploads/
+HRSystem.UI/logs/
+HRSystem.UI
