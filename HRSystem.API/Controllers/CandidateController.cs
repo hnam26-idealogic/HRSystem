@@ -28,7 +28,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet("{id:Guid}")]
-        public async Task<IActionResult> GetById(Guid id)
+        public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             var candidate = await candidateRepository.GetByIdAsync(id);
             if (candidate == null) return NotFound();
@@ -45,7 +45,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCandidateRequestDto updateCandidateRequestDto)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateCandidateRequestDto updateCandidateRequestDto)
         {
             var candidateEntity = mapper.Map<Candidate>(updateCandidateRequestDto);
             var updatedCandidate = await candidateRepository.UpdateAsync(id, candidateEntity);
@@ -54,7 +54,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             var deleted = await candidateRepository.DeleteAsync(id);
             if (!deleted) return NotFound();

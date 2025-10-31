@@ -53,7 +53,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequestDto updateUserRequestDto)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateUserRequestDto updateUserRequestDto)
         {
             var userEntity = mapper.Map<User>(updateUserRequestDto);
             var updatedUser = await userRepository.UpdateAsync(id, userEntity);
@@ -62,7 +62,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             var deletedUser = await userRepository.DeleteAsync(id);
             if (!deletedUser) return NotFound();
