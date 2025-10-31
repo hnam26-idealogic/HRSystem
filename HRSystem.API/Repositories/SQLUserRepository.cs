@@ -33,6 +33,11 @@ namespace HRSystem.API.Repositories
 
         public async Task<User> AddAsync(User user, string password)
         {
+            // Check for duplicate email (case-insensitive)
+            var normalizedEmail = userManager.NormalizeEmail(user.Email);
+            if (await dbContext.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail))
+                throw new InvalidOperationException("A user with this email already exists.");
+
             var result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded)
                 throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));

@@ -5,6 +5,8 @@ namespace HRSystem.API.Models.DTO
     public class AddUserRequestDto
     {
         [Required]
+        public string Username { get; set; } = string.Empty;
+        [Required]
         public string Fullname { get; set; } = string.Empty;
         [Required]
         [EmailAddress]
