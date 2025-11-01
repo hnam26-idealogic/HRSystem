@@ -36,7 +36,7 @@ namespace HRSystem.API.Repositories
             return await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<User> AddAsync(User user, string password, string roleName)
+        public async Task<User> AddAsync(User user, string password)
         {
             // Check for duplicate email (case-insensitive)
             var normalizedEmail = userManager.NormalizeEmail(user.Email);
@@ -46,10 +46,6 @@ namespace HRSystem.API.Repositories
             var result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded)
                 throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
-
-            var roleResult = await userManager.AddToRoleAsync(user, roleName);
-            if (!roleResult.Succeeded)
-                throw new Exception("" + string.Join("; ", roleResult.Errors.Select(e => e.Description)));
 
             return user;
         }

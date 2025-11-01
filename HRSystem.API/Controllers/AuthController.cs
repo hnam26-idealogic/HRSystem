@@ -1,6 +1,7 @@
 ﻿using HRSystem.API.Models.Domain;
 using HRSystem.API.Models.DTO;
 using HRSystem.API.Repositories;
+using HRSystem.API.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,13 +11,15 @@ namespace HRSystem.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IUserRepository userRepository;
-        private readonly RoleManager<IdentityRole<Guid>> roleManager;
+        private readonly IAuthService authService;
+        private readonly IRoleService roleService;
+        private readonly ITokenRepository tokenRepository;
 
-        public AuthController(IUserRepository userRepository, RoleManager<IdentityRole<Guid>> roleManager)
+        public AuthController(IAuthService authService, IRoleService roleService, ITokenRepository tokenRepository)
         {
-            this.userRepository = userRepository;
-            this.roleManager = roleManager;
+            this.authService = authService;
+            this.roleService = roleService;
+            this.tokenRepository = tokenRepository;
         }
 
         [HttpPost("register")]
@@ -25,18 +28,9 @@ namespace HRSystem.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var existingUser = await userRepository.GetByEmailAsync(request.Email);
-            if (existingUser != null)
-                return BadRequest(new { message = "Email is already registered." });
-
-            // Ensure role exists
+            // Ensure role exists and assign to user
             var roleName = request.UserType.ToString();
-            if (!await roleManager.RoleExistsAsync(roleName))
-            {
-                var roleResult = await roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
-                if (!roleResult.Succeeded)
-                    return BadRequest(roleResult.Errors);
-            }
+            await roleService.EnsureRoleExistsAsync(roleName);
 
             var user = new User
             {
@@ -44,18 +38,16 @@ namespace HRSystem.API.Controllers
                 Email = request.Email,
                 Fullname = request.Fullname,
                 PhoneNumber = request.PhoneNumber,
-                UserType = request.UserType, 
-                AccessLevel = request.AccessLevel.ToString(), 
+                UserType = request.UserType,
+                AccessLevel = request.AccessLevel,
                 Specialty = request.Specialty
             };
 
-            var createdUser = await userRepository.AddAsync(user, request.Password, roleName);
+            var result = await authService.RegisterAsync(user, request.Password);
+            if (result == null)
+                return BadRequest(new { message = "Registration failed." });
 
-            // Assign role to user
-            // You may need to expose AddToRoleAsync in your repository, or use userManager here if needed
-            // For now, use roleManager to ensure role exists, but role assignment should be handled in repository for consistency
-            // If not, you can inject UserManager<User> as well
-
+            await roleService.AssignRoleAsync(user, roleName);
             return Ok(new { message = "Registration successful." });
         }
 
@@ -65,16 +57,29 @@ namespace HRSystem.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = await userRepository.GetByUsernameAsync(request.Username);
+            var user = await authService.LoginAsync(request.Username, request.Password);
             if (user == null)
-                return Unauthorized(new { message = "Invalid username." });
+                return Unauthorized(new { message = "Invalid username or password." });
 
-            // You may need to expose password check in your repository
-            // For now, assume repository handles password validation
-            // If not, inject UserManager<User> as well
+            var roles = await roleService.GetUserRolesAsync(user);
+            
+            if (roles == null)
+            {
+                return Unauthorized(new { message = "Invalid username or password." });
+            }
+            var jwtToken = tokenRepository.CreateJwtToken(user, roles.ToList());
 
+            if (jwtToken == null)
+            {
+                return Unauthorized(new { message = "Invalid username or password." });
+            }
+
+            var response = new LoginResponseDto
+            {
+                JwtToken = jwtToken
+            };
             // You can add JWT token generation here if needed
-            return Ok(new { message = "Login successful." });
+            return Ok(response);
         }
     }
 }
