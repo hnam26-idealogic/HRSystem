@@ -91,6 +91,11 @@ namespace HRSystem.API.Data
                     method?.Invoke(null, new object[] { modelBuilder });
                 }
             }
+
+            modelBuilder.Entity<IdentityRole<Guid>>().HasData(
+                new IdentityRole<Guid> { Id = Guid.Parse("fa38156a-39ba-4a73-9276-55a5f8bad076"), Name = "HR", NormalizedName = "HR" },
+                new IdentityRole<Guid> { Id = Guid.Parse("cbe8b8d7-7e11-4f8c-b25a-189e62dbca07"), Name = "Interviewer", NormalizedName = "INTERVIEWER" }
+            );
         }
 
         private static void SetSoftDeleteFiler<TEntity>(ModelBuilder builder) where TEntity : BaseEntity

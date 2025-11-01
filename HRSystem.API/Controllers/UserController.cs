@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HRSystem.API.CustomActionFilters;
 using HRSystem.API.Models.Domain;
 using HRSystem.API.Models.DTO;
 using HRSystem.API.Repositories;
@@ -43,15 +44,15 @@ namespace HRSystem.API.Controllers
             return Ok(userDto);
         }
 
-        [HttpPost]
-        [ValidateModel]
-        public async Task<IActionResult> Add([FromBody] AddUserRequestDto addUserRequestDto)
-        {
-            var userEntity = mapper.Map<User>(addUserRequestDto);
-            var createdUser = await userRepository.AddAsync(userEntity, addUserRequestDto.Password);
-            var createdUserDto = mapper.Map<UserDto>(createdUser);
-            return CreatedAtAction(nameof(GetById), new { id = createdUserDto.Id }, createdUserDto);
-        }
+        // [HttpPost]
+        // [ValidateModel]
+        // public async Task<IActionResult> Add([FromBody] AddUserRequestDto addUserRequestDto)
+        // {
+        //     var userEntity = mapper.Map<User>(addUserRequestDto);
+        //     var createdUser = await userRepository.AddAsync(userEntity, addUserRequestDto.Password);
+        //     var createdUserDto = mapper.Map<UserDto>(createdUser);
+        //     return CreatedAtAction(nameof(GetById), new { id = createdUserDto.Id }, createdUserDto);
+        // }
 
         [HttpPut("{id:Guid}")]
         [ValidateModel]
