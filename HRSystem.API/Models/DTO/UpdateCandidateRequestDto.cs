@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace HRSystem.API.Models.DTO
 {
@@ -8,7 +9,6 @@ namespace HRSystem.API.Models.DTO
         public string Fullname { get; set; } = string.Empty;
         [Required]
         public string Phone { get; set; } = string.Empty;
-        [Required]
-        public string ResumePath { get; set; } = string.Empty;
+        public IFormFile? Resume { get; set; }
     }
 }
