@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace HRSystem.API.Services
 {
@@ -21,6 +22,13 @@ namespace HRSystem.API.Services
         public async Task<(string resumePath, byte[] resumeBytes)> UploadAsync(
             IFormFile file)
         {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("No file uploaded.");
+
+            if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) ||
+                file.ContentType != "application/pdf")
+                throw new InvalidOperationException("Only PDF files are allowed.");
+
             var uploadsFolder = Path.Combine(webHostEnvironment.ContentRootPath,
                 "Resumes");
             Directory.CreateDirectory(uploadsFolder);

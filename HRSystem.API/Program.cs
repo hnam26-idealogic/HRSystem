@@ -72,6 +72,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.WithOrigins("https://localhost:7208") // Blazor UI origin
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -95,5 +103,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
+
+app.UseCors();
 
 app.Run();
