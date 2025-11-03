@@ -13,19 +13,28 @@ namespace HRSystem.API.Repositories
             this.dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Candidate>> GetAllAsync()
+        public async Task<IEnumerable<Candidate>> GetAllAsync(int page = 1, int size = 10)
         {
-            return await dbContext.Candidates.ToListAsync();
+            return await dbContext.Candidates
+                .Where(c => c.DeletedAt == null)
+                .OrderBy(c => c.Fullname)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
         }
 
         public async Task<Candidate?> GetByIdAsync(Guid id)
         {
-            return await dbContext.Candidates.FindAsync(id);
+            return await dbContext.Candidates
+                .Where(c => c.DeletedAt == null && c.Id == id)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Candidate?> GetByEmailAsync(string email)
         {
-            return await dbContext.Candidates.FirstOrDefaultAsync(c => c.Email == email);
+            return await dbContext.Candidates
+                .Where(c => c.DeletedAt == null && c.Email == email)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Candidate> AddAsync(Candidate candidate)
@@ -59,7 +68,8 @@ namespace HRSystem.API.Repositories
             if (candidate == null)
                 return false;
 
-            dbContext.Candidates.Remove(candidate);
+            candidate.DeletedAt = DateTime.UtcNow;
+            dbContext.Candidates.Update(candidate);
             await dbContext.SaveChangesAsync();
             return true;
         }

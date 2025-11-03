@@ -16,9 +16,13 @@ namespace HRSystem.API.Repositories
             this.dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync()
+        public async Task<IEnumerable<User>> GetAllAsync(int page = 1, int size = 10)
         {
-            return await dbContext.Users.ToListAsync();
+            return await dbContext.Users
+                .OrderBy(u => u.Fullname)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
         }
 
         public async Task<User?> GetByIdAsync(Guid id)

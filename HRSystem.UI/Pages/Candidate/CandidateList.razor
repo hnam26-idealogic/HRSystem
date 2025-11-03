@@ -21,7 +21,7 @@
         <table class="table table-striped table-hover shadow">
             <thead class="table-dark">
                 <tr>
-                    <th>Fullname</th>
+                    <th>Full Name</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Resume</th>
@@ -38,12 +38,18 @@
                         <td>
                             @if (!string.IsNullOrEmpty(candidate.ResumePath))
                             {
-                                <a class="btn btn-outline-primary btn-sm" href="@candidate.ResumePath" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf"></i> Download
+                                <a class="btn btn-outline-primary btn-sm me-1" href="@candidate.ResumePath" target="_blank">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a class="btn btn-outline-success btn-sm" href="@candidate.ResumePath" download>
+                                    <i class="bi bi-download"></i> Download
                                 </a>
                             }
                         </td>
                         <td>
+                            <button class="btn btn-info btn-sm me-2" @onclick="() => NavigateToDetail(candidate.Id)">
+                                <i class="bi bi-eye"></i> View
+                            </button>
                             <button class="btn btn-warning btn-sm me-2" @onclick="() => NavigateToEdit(candidate.Id)">
                                 <i class="bi bi-pencil-square"></i> Edit
                             </button>
@@ -84,6 +90,11 @@
     private void NavigateToEdit(Guid id)
     {
         Navigation.NavigateTo($"/candidates/edit/{id}");
+    }
+
+    private void NavigateToDetail(Guid id)
+    {
+        Navigation.NavigateTo($"/candidates/{id}");
     }
 
     private async Task HandleDeleteCandidate(Guid id)

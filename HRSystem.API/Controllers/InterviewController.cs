@@ -37,18 +37,17 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
-            var interviews = await interviewRepository.GetAllAsync();
-            var interviewDtos = interviews.Select(i =>
+            var (pagedInterviews, totalCount) = await interviewRepository.GetPagedAsync(p, size);
+            var interviewDtos = mapper.Map<List<InterviewDto>>(pagedInterviews);
+            return Ok(new
             {
-                var dto = mapper.Map<InterviewDto>(i);
-                dto.CandidateName = candidates.FirstOrDefault(c => c.Id == i.CandidateId)?.Fullname ?? "";
-                dto.InterviewerName = users.FirstOrDefault(u => u.Id == i.InterviewerId)?.Fullname ?? "";
-                dto.HRName = users.FirstOrDefault(u => u.Id == i.HrId)?.Fullname ?? "";
-                return dto;
-            }).ToList();
-            return Ok(interviewDtos);
+                TotalCount = totalCount,
+                PageNumber = p,
+                PageSize = size,
+                Items = interviewDtos
+            });
         }
 
         [HttpGet("{id:Guid}")]

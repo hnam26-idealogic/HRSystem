@@ -1,0 +1,99 @@
+@page "/interviewers"
+@inject HRSystem.UI.Services.UserService UserService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Interviewers</h3>
+        <button class="btn btn-success" @onclick="NavigateToAdd">
+            <i class="bi bi-person-plus"></i> Add Interviewer
+        </button>
+    </div>
+    @if (interviewers == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <span class="ms-2">Loading...</span>
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped table-hover shadow">
+            <thead class="table-dark">
+                <tr>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Specialty</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var interviewer in interviewers)
+                {
+                    <tr>
+                        <td>@interviewer.Fullname</td>
+                        <td>@interviewer.Email</td>
+                        <td>@interviewer.PhoneNumber</td>
+                        <td>@interviewer.Specialty</td>
+                        <td>
+                            <button class="btn btn-info btn-sm me-2" @onclick="() => NavigateToDetail(interviewer.Id)">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                            <button class="btn btn-warning btn-sm me-2" @onclick="() => NavigateToEdit(interviewer.Id)">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => HandleDeleteInterviewer(interviewer.Id)">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    }
+</div>
+
+@code {
+    private List<HRSystem.UI.DTOs.UserDto> interviewers;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var users = await UserService.GetAllAsync();
+        interviewers = users.Where(u => u.UserType == "Interviewer").ToList();
+    }
+
+    private void NavigateToAdd()
+    {
+        Navigation.NavigateTo("/interviewers/add");
+    }
+
+    private void NavigateToEdit(Guid id)
+    {
+        Navigation.NavigateTo($"/interviewers/edit/{id}");
+    }
+
+    private void NavigateToDetail(Guid id)
+    {
+        Navigation.NavigateTo($"/interviewers/{id}");
+    }
+
+    private async Task HandleDeleteInterviewer(Guid id)
+    {
+        var success = await UserService.DeleteAsync(id);
+        if (success)
+        {
+            var users = await UserService.GetAllAsync();
+            interviewers = users.Where(u => u.UserType == "Interviewer").ToList();
+        }
+        else
+        {
+            errorMessage = "Failed to delete interviewer.";
+        }
+    }
+}

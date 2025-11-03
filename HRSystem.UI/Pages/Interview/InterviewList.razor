@@ -10,14 +10,6 @@
             <i class="bi bi-calendar-plus"></i> Add Interview
         </button>
     </div>
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <input class="form-control" placeholder="Search candidate by name or email" @bind="candidateSearch" />
-        </div>
-        <div class="col-md-6">
-            <input class="form-control" placeholder="Search interviewer by name or email" @bind="interviewerSearch" />
-        </div>
-    </div>
     @if (interviews == null)
     {
         <div class="text-center">
@@ -38,7 +30,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var interview in FilteredInterviews)
+                @foreach (var interview in interviews)
                 {
                     <tr>
                         <td>@interview.CandidateName</td>
@@ -67,15 +59,6 @@
 @code {
     private List<InterviewDto> interviews;
     private string errorMessage;
-    private string candidateSearch = string.Empty;
-    private string interviewerSearch = string.Empty;
-
-    private IEnumerable<InterviewDto> FilteredInterviews =>
-        interviews == null ? Enumerable.Empty<InterviewDto>() :
-        interviews.Where(i =>
-            (string.IsNullOrWhiteSpace(candidateSearch) || (i.CandidateName?.Contains(candidateSearch, StringComparison.OrdinalIgnoreCase) == true || i.CandidateEmail?.Contains(candidateSearch, StringComparison.OrdinalIgnoreCase) == true)) &&
-            (string.IsNullOrWhiteSpace(interviewerSearch) || (i.InterviewerName?.Contains(interviewerSearch, StringComparison.OrdinalIgnoreCase) == true || i.InterviewerEmail?.Contains(interviewerSearch, StringComparison.OrdinalIgnoreCase) == true))
-        );
 
     protected override async Task OnInitializedAsync()
     {

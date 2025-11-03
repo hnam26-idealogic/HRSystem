@@ -14,10 +14,10 @@ namespace HRSystem.API.Models.Domain
         public UserType UserType { get; set; }
 
         // HR-specific
-        public string? AccessLevel { get; set; }
+        public string? AccessLevel { get; set; } = null;
 
         // Interviewer-specific
-        public string? Specialty { get; set; }
+        public string? Specialty { get; set; } = null;
 
         // Navigation properties
         [NotMapped]

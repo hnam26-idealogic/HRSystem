@@ -13,9 +13,13 @@ namespace HRSystem.API.Repositories
             this.dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Interview>> GetAllAsync()
+        public async Task<IEnumerable<Interview>> GetAllAsync(int page = 1, int size = 10)
         {
-            return await dbContext.Interviews.ToListAsync();
+            return await dbContext.Interviews
+                .OrderBy(i => i.InterviewedAt)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
         }
 
         public async Task<Interview?> GetByIdAsync(Guid id)

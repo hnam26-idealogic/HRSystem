@@ -1,0 +1,86 @@
+@page "/interviewers/edit/{Id:guid}"
+@inject HRSystem.UI.Services.UserService UserService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">Edit Interviewer</h3>
+                </div>
+                <div class="card-body">
+                    @if (editInterviewerModel == null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span class="ms-2">Loading...</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="@editInterviewerModel" OnValidSubmit="HandleEditInterviewer">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="mb-3">
+                                <label for="fullname" class="form-label">Full Name</label>
+                                <InputText id="fullname" class="form-control" @bind-Value="editInterviewerModel.Fullname" placeholder="Full Name" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <InputText id="phone" class="form-control" @bind-Value="editInterviewerModel.PhoneNumber" placeholder="Phone Number" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="specialty" class="form-label">Specialty</label>
+                                <InputText id="specialty" class="form-control" @bind-Value="editInterviewerModel.Specialty" placeholder="Specialty" />
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100">Save</button>
+                            <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
+                        </EditForm>
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mt-3">@errorMessage</div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private UpdateUserRequestDto editInterviewerModel;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var interviewer = await UserService.GetByIdAsync(Id);
+        editInterviewerModel = new UpdateUserRequestDto
+        {
+            Fullname = interviewer.Fullname,
+            PhoneNumber = interviewer.PhoneNumber,
+            Specialty = interviewer.Specialty,
+            AccessLevel = null,
+            UserType = "Interviewer"
+        };
+    }
+
+    private async Task HandleEditInterviewer()
+    {
+        var success = await UserService.UpdateAsync(Id, editInterviewerModel);
+        if (success)
+        {
+            Navigation.NavigateTo("/interviewers");
+        }
+        else
+        {
+            errorMessage = "Failed to update interviewer.";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/interviewers");
+    }
+}

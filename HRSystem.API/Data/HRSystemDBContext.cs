@@ -55,7 +55,6 @@ namespace HRSystem.API.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
-
             modelBuilder.Entity<Interview>()
                 .HasOne(i => i.HR)
                 .WithMany()

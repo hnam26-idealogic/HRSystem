@@ -7,11 +7,15 @@ namespace HRSystem.API.Models.DTO
     {
         [Required]
         public string Fullname { get; set; } = string.Empty;
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
+
         [Required]
         public string Phone { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Resume file is required.")]
         public IFormFile? Resume { get; set; }
     }
 }

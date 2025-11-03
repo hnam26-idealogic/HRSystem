@@ -4,7 +4,7 @@ namespace HRSystem.API.Repositories
 {
     public interface IUserRepository
     {
-        Task<IEnumerable<User>> GetAllAsync();
+    Task<IEnumerable<User>> GetAllAsync(int page = 1, int size = 10);
         Task<User?> GetByIdAsync(Guid id);
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByUsernameAsync(string username);

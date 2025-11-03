@@ -30,6 +30,17 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <InputFile class="form-control" OnChange="HandleEditFileChange" />
+                                    @if (!string.IsNullOrEmpty(currentResumePath))
+                                    {
+                                        <div class="mt-2">
+                                            <a class="btn btn-outline-primary btn-sm me-1" href="@currentResumePath" target="_blank">
+                                            <i class="bi bi-eye"></i>Current CV
+                                            </a>
+                                            @* <a class="btn btn-outline-success btn-sm" href="@currentResumePath" download>
+                                            <i class="bi bi-download"></i> Download Current CV
+                                            </a> *@
+                                        </div>
+                                    }
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-warning w-100">Save</button>
@@ -51,6 +62,7 @@
     private HRSystem.UI.DTOs.UpdateCandidateRequestDto editCandidateModel;
     private IBrowserFile editResumeFile;
     private string errorMessage;
+    private string currentResumePath;
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,6 +72,7 @@
             Fullname = candidate.Fullname,
             Phone = candidate.Phone
         };
+        currentResumePath = candidate.ResumePath;
     }
 
     private void HandleEditFileChange(InputFileChangeEventArgs e)

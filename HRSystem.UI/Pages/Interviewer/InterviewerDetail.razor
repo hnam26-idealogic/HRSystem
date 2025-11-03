@@ -1,0 +1,53 @@
+@page "/interviewers/{Id:guid}"
+@inject HRSystem.UI.Services.UserService UserService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Interviewer Details</h3>
+                </div>
+                <div class="card-body">
+                    @if (interviewer == null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span class="ms-2">Loading...</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <dl class="row">
+                            <dt class="col-sm-4">Full Name</dt>
+                            <dd class="col-sm-8">@interviewer.Fullname</dd>
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@interviewer.Email</dd>
+                            <dt class="col-sm-4">Phone Number</dt>
+                            <dd class="col-sm-8">@interviewer.PhoneNumber</dd>
+                            <dt class="col-sm-4">Specialty</dt>
+                            <dd class="col-sm-8">@interviewer.Specialty</dd>
+                        </dl>
+                        <button class="btn btn-secondary mt-3" @onclick="NavigateBack">Back</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private HRSystem.UI.DTOs.UserDto interviewer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        interviewer = await UserService.GetByIdAsync(Id);
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/interviewers");
+    }
+}

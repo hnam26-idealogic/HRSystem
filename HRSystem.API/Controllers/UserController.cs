@@ -25,14 +25,17 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
-            // logger.LogInformation("Fetching all users");
-
-            var users = await userRepository.GetAllAsync();
-
-            var userDtos = mapper.Map<List<UserDto>>(users);
-            return Ok(userDtos);
+            var (pagedUsers, totalCount) = await userRepository.GetPagedAsync(p, size);
+            var userDtos = mapper.Map<List<UserDto>>(pagedUsers);
+            return Ok(new
+            {
+                TotalCount = totalCount,
+                PageNumber = p,
+                PageSize = size,
+                Items = userDtos
+            });
         }
 
         [HttpGet("{id:Guid}")]

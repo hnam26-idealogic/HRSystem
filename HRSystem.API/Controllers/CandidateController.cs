@@ -25,10 +25,17 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
-            var candidates = await candidateRepository.GetAllAsync();
-            return Ok(mapper.Map<List<CandidateDto>>(candidates));
+            var (pagedCandidates, totalCount) = await candidateRepository.GetPagedAsync(p, size);
+            var candidateDtos = mapper.Map<List<CandidateDto>>(pagedCandidates);
+            return Ok(new
+            {
+                TotalCount = totalCount,
+                PageNumber = p,
+                PageSize = size,
+                Items = candidateDtos
+            });
         }
 
         [HttpGet("{id:Guid}")]
@@ -43,13 +50,20 @@ namespace HRSystem.API.Controllers
         [ValidateModel]
         public async Task<IActionResult> Add([FromForm] AddCandidateRequestDto addCandidateRequestDto)
         {
+            // Check if email exists
+            var existingCandidate = await candidateRepository.GetByEmailAsync(addCandidateRequestDto.Email);
+            if (existingCandidate != null)
+            {
+                ModelState.AddModelError("Email", "A candidate with this email already exists.");
+                return ValidationProblem(ModelState);
+            }
+
+            // Resume validation is handled by [Required] attribute
+
             var candidateEntity = mapper.Map<Candidate>(addCandidateRequestDto);
 
-            if (addCandidateRequestDto.Resume != null)
-            {
-                var (resumePath, _) = await fileStorageService.UploadAsync(addCandidateRequestDto.Resume);
-                candidateEntity.ResumePath = resumePath;
-            }
+            var (resumePath, _) = await fileStorageService.UploadAsync(addCandidateRequestDto.Resume!);
+            candidateEntity.ResumePath = resumePath;
 
             var createdCandidate = await candidateRepository.AddAsync(candidateEntity);
             var createdCandidateDto = mapper.Map<CandidateDto>(createdCandidate);
@@ -60,13 +74,17 @@ namespace HRSystem.API.Controllers
         [ValidateModel]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] UpdateCandidateRequestDto updateCandidateRequestDto)
         {
+            // Optionally require resume on update
+            if (updateCandidateRequestDto.Resume == null)
+            {
+                ModelState.AddModelError("Resume", "Resume file is required for update.");
+                return ValidationProblem(ModelState);
+            }
+
             var candidateEntity = mapper.Map<Candidate>(updateCandidateRequestDto);
 
-            if (updateCandidateRequestDto.Resume != null)
-            {
-                var (resumePath, _) = await fileStorageService.UploadAsync(updateCandidateRequestDto.Resume);
-                candidateEntity.ResumePath = resumePath;
-            }
+            var (resumePath, _) = await fileStorageService.UploadAsync(updateCandidateRequestDto.Resume!);
+            candidateEntity.ResumePath = resumePath;
 
             var updatedCandidate = await candidateRepository.UpdateAsync(id, candidateEntity);
             var updatedCandidateDto = mapper.Map<CandidateDto>(updatedCandidate);
