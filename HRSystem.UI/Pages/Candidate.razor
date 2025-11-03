@@ -1,0 +1,181 @@
+@page "/candidates"
+@inject HRSystem.UI.Services.CandidateService CandidateService
+
+<h3>Candidates</h3>
+<button class="btn btn-success mb-2" @onclick="ShowAddForm">Add Candidate</button>
+
+@if (showAddForm)
+{
+    <EditForm Model="@addCandidateModel" OnValidSubmit="HandleAddCandidate">
+        <InputText @bind-Value="addCandidateModel.Fullname" placeholder="Full Name" />
+        <InputText @bind-Value="addCandidateModel.Email" placeholder="Email" />
+        <InputText @bind-Value="addCandidateModel.Phone" placeholder="Phone" />
+        <InputFile OnChange="HandleFileChange" />
+        <button type="submit" class="btn btn-primary">Add</button>
+        <button type="button" class="btn btn-secondary" @onclick="HideAddForm">Cancel</button>
+    </EditForm>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="text-danger">@errorMessage</div>
+    }
+}
+
+@if (showEditForm)
+{
+    <EditForm Model="@editCandidateModel" OnValidSubmit="HandleEditCandidate">
+        <InputText @bind-Value="editCandidateModel.Fullname" placeholder="Full Name" />
+        <InputText @bind-Value="editCandidateModel.Phone" placeholder="Phone" />
+        <InputFile OnChange="HandleEditFileChange" />
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" @onclick="HideEditForm">Cancel</button>
+    </EditForm>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="text-danger">@errorMessage</div>
+    }
+}
+
+@if (candidates == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fullname</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Resume</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var candidate in candidates)
+            {
+                <tr>
+                    <td>@candidate.Fullname</td>
+                    <td>@candidate.Email</td>
+                    <td>@candidate.Phone</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(candidate.ResumePath))
+                        {
+                            <a href="@candidate.ResumePath" target="_blank">Download</a>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ShowEditForm(candidate)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => HandleDeleteCandidate(candidate.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<HRSystem.UI.DTOs.CandidateDto> candidates;
+    private HRSystem.UI.DTOs.AddCandidateRequestDto addCandidateModel = new();
+    private HRSystem.UI.DTOs.UpdateCandidateRequestDto editCandidateModel = new();
+    private IBrowserFile addResumeFile;
+    private IBrowserFile editResumeFile;
+    private Guid editCandidateId;
+    private bool showAddForm = false;
+    private bool showEditForm = false;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCandidates();
+    }
+
+    private async Task LoadCandidates()
+    {
+        candidates = await CandidateService.GetAllAsync();
+    }
+
+    private void ShowAddForm()
+    {
+        showAddForm = true;
+        errorMessage = null;
+        addCandidateModel = new();
+        addResumeFile = null;
+    }
+
+    private void HideAddForm()
+    {
+        showAddForm = false;
+        errorMessage = null;
+    }
+
+    private void ShowEditForm(HRSystem.UI.DTOs.CandidateDto candidate)
+    {
+        showEditForm = true;
+        errorMessage = null;
+        editCandidateId = candidate.Id;
+        editCandidateModel = new HRSystem.UI.DTOs.UpdateCandidateRequestDto
+        {
+            Fullname = candidate.Fullname,
+            Phone = candidate.Phone
+        };
+        editResumeFile = null;
+    }
+
+    private void HideEditForm()
+    {
+        showEditForm = false;
+        errorMessage = null;
+    }
+
+    private void HandleFileChange(InputFileChangeEventArgs e)
+    {
+        addResumeFile = e.File;
+    }
+
+    private void HandleEditFileChange(InputFileChangeEventArgs e)
+    {
+        editResumeFile = e.File;
+    }
+
+    private async Task HandleAddCandidate()
+    {
+        var success = await CandidateService.AddAsync(addCandidateModel, addResumeFile);
+        if (success)
+        {
+            await LoadCandidates();
+            HideAddForm();
+        }
+        else
+        {
+            errorMessage = "Failed to add candidate.";
+        }
+    }
+
+    private async Task HandleEditCandidate()
+    {
+        var success = await CandidateService.UpdateAsync(editCandidateId, editCandidateModel, editResumeFile);
+        if (success)
+        {
+            await LoadCandidates();
+            HideEditForm();
+        }
+        else
+        {
+            errorMessage = "Failed to update candidate.";
+        }
+    }
+
+    private async Task HandleDeleteCandidate(Guid id)
+    {
+        var success = await CandidateService.DeleteAsync(id);
+        if (success)
+        {
+            await LoadCandidates();
+        }
+        else
+        {
+            errorMessage = "Failed to delete candidate.";
+        }
+    }
+}

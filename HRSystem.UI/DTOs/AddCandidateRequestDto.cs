@@ -1,0 +1,17 @@
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+
+namespace HRSystem.UI.DTOs
+{
+    public class AddCandidateRequestDto
+    {
+        [Required]
+        public string Fullname { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+        [Required]
+        public string Phone { get; set; } = string.Empty;
+        public IFormFile? Resume { get; set; }
+    }
+}

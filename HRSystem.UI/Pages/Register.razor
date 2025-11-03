@@ -1,0 +1,42 @@
+@page "/register"
+@using HRSystem.UI.DTOs
+@inject HRSystem.UI.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
+<h3>Register</h3>
+<EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+    <InputText @bind-Value="registerModel.Username" placeholder="Username" />
+    <InputText @bind-Value="registerModel.Email" placeholder="Email" />
+    <InputText @bind-Value="registerModel.Password" type="password" placeholder="Password" />
+    <InputText @bind-Value="registerModel.Fullname" placeholder="Full Name" />
+    <InputText @bind-Value="registerModel.PhoneNumber" placeholder="Phone Number" />
+    <InputSelect @bind-Value="registerModel.UserType">
+        <option value="HR">HR</option>
+        <option value="Interviewer">Interviewer</option>
+    </InputSelect>
+    <InputText @bind-Value="registerModel.AccessLevel" placeholder="Access Level" />
+    <InputText @bind-Value="registerModel.Specialty" placeholder="Specialty" />
+    <button type="submit" class="btn btn-primary">Register</button>
+</EditForm>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="text-danger">@errorMessage</div>
+}
+
+@code {
+    private RegisterRequestDto registerModel = new();
+    private string errorMessage;
+
+    private async Task HandleRegister()
+    {
+        var success = await AuthService.RegisterAsync(registerModel);
+        if (success)
+        {
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            errorMessage = "Registration failed.";
+        }
+    }
+}
