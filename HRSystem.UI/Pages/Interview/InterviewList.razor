@@ -38,6 +38,9 @@
                         <td>@interview.InterviewedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>@interview.Status</td>
                         <td>
+                            <button class="btn btn-info btn-sm me-2" @onclick="() => NavigateToDetail(interview.Id)">
+                                <i class="bi bi-eye"></i> View
+                            </button>
                             <button class="btn btn-warning btn-sm me-2" @onclick="() => NavigateToEdit(interview.Id)">
                                 <i class="bi bi-pencil-square"></i> Edit
                             </button>
@@ -78,6 +81,11 @@
     private void NavigateToEdit(Guid id)
     {
         Navigation.NavigateTo($"/interviews/edit/{id}");
+    }
+
+    private void NavigateToDetail(Guid id)
+    {
+        Navigation.NavigateTo($"/interviews/{id}");
     }
 
     private async Task HandleDeleteInterview(Guid id)

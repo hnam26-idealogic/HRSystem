@@ -1,3 +1,4 @@
+using HRSystem.UI.DTOs;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
@@ -18,10 +19,25 @@ namespace HRSystem.UI.Services
             this.jwtService = jwtService;
         }
 
-        public async Task<List<InterviewDto>> GetAllAsync()
+        public async Task<List<InterviewDto>> GetAllAsync(int page = 1, int size = 10)
         {
             await jwtService.ApplyJwtAsync(httpClient);
-            return await httpClient.GetFromJsonAsync<List<InterviewDto>>("/api/Interview");
+            var response = await httpClient.GetAsync($"/api/Interview?p={page}&size={size}");
+            var rawJson = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Raw API response:");
+            Console.WriteLine(rawJson);
+            if (!response.IsSuccessStatusCode) return new List<InterviewDto>();
+            var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
+            Console.WriteLine("Deserialized PagedResult:");
+            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(result));
+            if (result?.Items != null)
+            {
+                foreach (var interview in result.Items)
+                {
+                    Console.WriteLine($"InterviewId: {interview.Id}, CandidateId: {interview.CandidateId}, CandidateName: {interview.CandidateName}, InterviewerId: {interview.InterviewerId}, InterviewerName: {interview.InterviewerName}");
+                }
+            }
+            return result?.Items ?? new List<InterviewDto>();
         }
 
         public async Task<InterviewDto> GetByIdAsync(Guid id)

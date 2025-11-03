@@ -25,13 +25,13 @@ namespace HRSystem.UI.DTOs
         public string Recording { get; set; } = string.Empty;
 
         [Range(1, 5, ErrorMessage = "English score must be between 1 and 5.")]
-        public int English { get; set; }
+        public int? English { get; set; } = null;
 
         [Range(1, 5, ErrorMessage = "Technical score must be between 1 and 5.")]
-        public int Technical { get; set; }
+        public int? Technical { get; set; } = null;
 
         [Range(1, 5, ErrorMessage = "Recommend score must be between 1 and 5.")]
-        public int Recommend { get; set; }
+        public int? Recommend { get; set; } = null;
 
         [Required(ErrorMessage = "Status is required.")]
         [StringLength(50, ErrorMessage = "Status must be less than 50 characters.")]

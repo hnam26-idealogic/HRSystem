@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using HRSystem.UI.DTOs;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -27,10 +28,13 @@ namespace HRSystem.UI.Services
                 : null;
         }
 
-        public async Task<List<CandidateDto>> GetAllAsync()
+        public async Task<List<CandidateDto>> GetAllAsync(int page = 1, int size = 10)
         {
             await jwtService.ApplyJwtAsync(httpClient);
-            return await httpClient.GetFromJsonAsync<List<CandidateDto>>("/api/Candidate");
+            var response = await httpClient.GetAsync($"/api/Candidate?p={page}&size={size}");
+            if (!response.IsSuccessStatusCode) return new List<CandidateDto>();
+            var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
+            return result?.Items ?? new List<CandidateDto>();
         }
 
         public async Task<CandidateDto> GetByIdAsync(Guid id)

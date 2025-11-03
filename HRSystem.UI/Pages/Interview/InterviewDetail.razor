@@ -1,0 +1,64 @@
+@page "/interviews/{Id:guid}"
+@using HRSystem.UI.DTOs
+@inject HRSystem.UI.Services.InterviewService InterviewService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Interview Details</h3>
+                </div>
+                <div class="card-body">
+                    @if (interview == null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span class="ms-2">Loading...</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <dl class="row">
+                            <dt class="col-sm-4">Candidate</dt>
+                            <dd class="col-sm-8">@interview.CandidateName</dd>
+                            <dt class="col-sm-4">Interviewer</dt>
+                            <dd class="col-sm-8">@interview.InterviewerName</dd>
+                            <dt class="col-sm-4">HR</dt>
+                            <dd class="col-sm-8">@interview.HRName</dd>
+                            <dt class="col-sm-4">Job</dt>
+                            <dd class="col-sm-8">@interview.Job</dd>
+                            <dt class="col-sm-4">Interviewed At</dt>
+                            <dd class="col-sm-8">@interview.InterviewedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+                            <dt class="col-sm-4">English Score</dt>
+                            <dd class="col-sm-8">@interview.English</dd>
+                            <dt class="col-sm-4">Technical Score</dt>
+                            <dd class="col-sm-8">@interview.Technical</dd>
+                            <dt class="col-sm-4">Recommend Score</dt>
+                            <dd class="col-sm-8">@interview.Recommend</dd>
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">@interview.Status</dd>
+                        </dl>
+                        <button class="btn btn-secondary mt-3" @onclick="NavigateBack">Back</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private InterviewDto interview;
+
+    protected override async Task OnInitializedAsync()
+    {
+        interview = await InterviewService.GetByIdAsync(Id);
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/interviews");
+    }
+}

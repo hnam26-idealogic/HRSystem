@@ -24,14 +24,14 @@ namespace HRSystem.API.Models.DTO
         [StringLength(500)]
         public string Recording { get; set; } = string.Empty;
 
-        [Range(1, 5)]
-        public int English { get; set; }
+        [Range(1, 5, ErrorMessage = "English score must be between 1 and 5.")]
+        public int? English { get; set; } = null;
 
-        [Range(1, 5)]
-        public int Technical { get; set; }
+        [Range(1, 5, ErrorMessage = "Technical score must be between 1 and 5.")]
+        public int? Technical { get; set; } = null;
 
-        [Range(1, 5)]
-        public int Recommend { get; set; }
+        [Range(1, 5, ErrorMessage = "Recommend score must be between 1 and 5.")]
+        public int? Recommend { get; set; } = null;
 
         [Required]
         [StringLength(50)]

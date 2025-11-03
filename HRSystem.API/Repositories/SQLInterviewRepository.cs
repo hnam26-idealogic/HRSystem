@@ -13,13 +13,16 @@ namespace HRSystem.API.Repositories
             this.dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Interview>> GetAllAsync(int page = 1, int size = 10)
+        public async Task<(IEnumerable<Interview> Items, int TotalCount)> GetAllAsync(int page = 1, int size = 10)
         {
-            return await dbContext.Interviews
+            var query = dbContext.Interviews;
+            var totalCount = await query.CountAsync();
+            var items = await query
                 .OrderBy(i => i.InterviewedAt)
                 .Skip((page - 1) * size)
                 .Take(size)
                 .ToListAsync();
+            return (items, totalCount);
         }
 
         public async Task<Interview?> GetByIdAsync(Guid id)

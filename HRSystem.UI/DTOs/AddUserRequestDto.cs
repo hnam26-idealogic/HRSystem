@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace HRSystem.API.Models.DTO
+namespace HRSystem.UI.DTOs
 {
     public class AddUserRequestDto
     {

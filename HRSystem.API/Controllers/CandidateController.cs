@@ -27,7 +27,7 @@ namespace HRSystem.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
-            var (pagedCandidates, totalCount) = await candidateRepository.GetPagedAsync(p, size);
+            var (pagedCandidates, totalCount) = await candidateRepository.GetAllAsync(p, size);
             var candidateDtos = mapper.Map<List<CandidateDto>>(pagedCandidates);
             return Ok(new
             {

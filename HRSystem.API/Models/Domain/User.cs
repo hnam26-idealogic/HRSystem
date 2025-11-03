@@ -22,5 +22,6 @@ namespace HRSystem.API.Models.Domain
         // Navigation properties
         [NotMapped]
         public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
+        public DateTime? DeletedAt { get; set; } = null;
     }
 }

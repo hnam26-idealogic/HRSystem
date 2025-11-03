@@ -16,28 +16,31 @@ namespace HRSystem.API.Repositories
             this.dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync(int page = 1, int size = 10)
+        public async Task<(IEnumerable<User> Items, int TotalCount)> GetAllAsync(int page = 1, int size = 10)
         {
-            return await dbContext.Users
+            var query = dbContext.Users.Where(u => u.DeletedAt == null);
+            var totalCount = await query.CountAsync();
+            var items = await query
                 .OrderBy(u => u.Fullname)
                 .Skip((page - 1) * size)
                 .Take(size)
                 .ToListAsync();
+            return (items, totalCount);
         }
 
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            return await dbContext.Users.FindAsync(id);
+            return await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == username);
+            return await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == username && u.DeletedAt == null);
         }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && u.DeletedAt == null);
         }
 
         public async Task<User> AddAsync(User user, string password)
@@ -77,7 +80,8 @@ namespace HRSystem.API.Repositories
             if (user == null)
                 return false;
 
-            dbContext.Users.Remove(user);
+            user.DeletedAt = DateTime.UtcNow;
+            dbContext.Users.Update(user);
             await dbContext.SaveChangesAsync();
             return true;
         }

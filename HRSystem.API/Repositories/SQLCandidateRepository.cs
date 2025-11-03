@@ -13,14 +13,16 @@ namespace HRSystem.API.Repositories
             this.dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Candidate>> GetAllAsync(int page = 1, int size = 10)
+        public async Task<(IEnumerable<Candidate> Items, int TotalCount)> GetAllAsync(int page = 1, int size = 10)
         {
-            return await dbContext.Candidates
-                .Where(c => c.DeletedAt == null)
+            var query = dbContext.Candidates.Where(c => c.DeletedAt == null);
+            var totalCount = await query.CountAsync();
+            var items = await query
                 .OrderBy(c => c.Fullname)
                 .Skip((page - 1) * size)
                 .Take(size)
                 .ToListAsync();
+            return (items, totalCount);
         }
 
         public async Task<Candidate?> GetByIdAsync(Guid id)

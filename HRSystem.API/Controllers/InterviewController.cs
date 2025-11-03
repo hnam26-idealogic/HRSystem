@@ -32,15 +32,21 @@ namespace HRSystem.API.Controllers
             this.mapper = mapper;
 
             // Fetch all candidates and users once for name mapping
-            candidates = candidateRepository.GetAllAsync().Result.ToList();
-            users = userRepository.GetAllAsync().Result.ToList();
+            candidates = candidateRepository.GetAllAsync().Result.Items.ToList();
+            users = userRepository.GetAllAsync().Result.Items.ToList();
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
-            var (pagedInterviews, totalCount) = await interviewRepository.GetPagedAsync(p, size);
+            var (pagedInterviews, totalCount) = await interviewRepository.GetAllAsync(p, size);
             var interviewDtos = mapper.Map<List<InterviewDto>>(pagedInterviews);
+            foreach (var dto in interviewDtos)
+            {
+                dto.CandidateName = candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
+                dto.InterviewerName = users.FirstOrDefault(u => u.Id == dto.InterviewerId)?.Fullname ?? "";
+                dto.HRName = users.FirstOrDefault(u => u.Id == dto.HrId)?.Fullname ?? "";
+            }
             return Ok(new
             {
                 TotalCount = totalCount,
