@@ -1,0 +1,115 @@
+@page "/interviews/add"
+@using HRSystem.UI.DTOs
+@using HRSystem.UI.Models
+@inject HRSystem.UI.Services.InterviewService InterviewService
+@inject HRSystem.UI.Services.CandidateService CandidateService
+@inject HRSystem.UI.Services.UserService UserService
+@inject NavigationManager Navigation
+@inject HttpClient HttpClient
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Add Interview</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@addInterviewModel" OnValidSubmit="HandleAddInterview">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Candidate</label>
+                                <InputSelect class="form-select" @bind-Value="addInterviewModel.CandidateId">
+                                    <option value="">Select Candidate</option>
+                                    @foreach (var candidate in candidates)
+                                    {
+                                        <option value="@candidate.Id">@candidate.Fullname</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Interviewer</label>
+                                <InputSelect class="form-select" @bind-Value="addInterviewModel.InterviewerId">
+                                    <option value="">Select Interviewer</option>
+                                    @foreach (var interviewer in interviewers)
+                                    {
+                                        <option value="@interviewer.Id">@interviewer.Fullname</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>HR</label>
+                                <InputSelect class="form-select" @bind-Value="addInterviewModel.HrId">
+                                    <option value="">Select HR</option>
+                                    @foreach (var hr in hrs)
+                                    {
+                                        <option value="@hr.Id">@hr.Fullname</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="addInterviewModel.Job" placeholder="Job" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputDate class="form-control" @bind-Value="addInterviewModel.InterviewedAt" />
+                            </div>
+                            @* <div class="col-md-4 mb-3">
+                                <InputNumber class="form-control" @bind-Value="addInterviewModel.English" placeholder="English Score" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <InputNumber class="form-control" @bind-Value="addInterviewModel.Technical" placeholder="Technical Score" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <InputNumber class="form-control" @bind-Value="addInterviewModel.Recommend" placeholder="Recommend Score" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="addInterviewModel.Status" placeholder="Status" />
+                            </div> *@
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Add Interview</button>
+                        <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
+                    </EditForm>
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private AddInterviewRequestDto addInterviewModel = new();
+    private List<CandidateDto> candidates = new();
+    private List<UserDto> interviewers = new();
+    private List<UserDto> hrs = new();
+    
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        candidates = await CandidateService.GetAllAsync();
+        var users = await UserService.GetAllAsync();
+        interviewers = users.Where(u => u.UserType == "Interviewer").ToList();
+        hrs = users.Where(u => u.UserType == "HR").ToList();
+    }
+
+    private async Task HandleAddInterview()
+    {
+        var success = await InterviewService.AddAsync(addInterviewModel);
+        if (success)
+        {
+            Navigation.NavigateTo("/interviews");
+        }
+        else
+        {
+            errorMessage = "Failed to add interview.";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/interviews");
+    }
+}

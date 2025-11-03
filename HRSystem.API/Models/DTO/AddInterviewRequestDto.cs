@@ -20,7 +20,7 @@ namespace HRSystem.API.Models.DTO
         [Required]
         public DateTime InterviewedAt { get; set; }
 
-        public byte[]? Recording { get; set; }
+        public string Recording { get; set; } = string.Empty;
         public int English { get; set; }
         public int Technical { get; set; }
         public int Recommend { get; set; }

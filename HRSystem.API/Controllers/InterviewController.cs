@@ -12,20 +12,43 @@ namespace HRSystem.API.Controllers
     [ApiController]
     public class InterviewController : ControllerBase
     {
-        private readonly IInterviewRepository interviewRepository;
-        private readonly IMapper mapper;
+    private readonly IInterviewRepository interviewRepository;
+    private readonly ICandidateRepository candidateRepository;
+    private readonly IUserRepository userRepository;
+    private readonly IMapper mapper;
 
-        public InterviewController(IInterviewRepository interviewRepository, IMapper mapper)
+    private List<Models.Domain.Candidate> candidates;
+    private List<Models.Domain.User> users;
+
+        public InterviewController(
+            IInterviewRepository interviewRepository,
+            ICandidateRepository candidateRepository,
+            IUserRepository userRepository,
+            IMapper mapper)
         {
             this.interviewRepository = interviewRepository;
+            this.candidateRepository = candidateRepository;
+            this.userRepository = userRepository;
             this.mapper = mapper;
+
+            // Fetch all candidates and users once for name mapping
+            candidates = candidateRepository.GetAllAsync().Result.ToList();
+            users = userRepository.GetAllAsync().Result.ToList();
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var interviews = await interviewRepository.GetAllAsync();
-            return Ok(mapper.Map<List<InterviewDto>>(interviews));
+            var interviewDtos = interviews.Select(i =>
+            {
+                var dto = mapper.Map<InterviewDto>(i);
+                dto.CandidateName = candidates.FirstOrDefault(c => c.Id == i.CandidateId)?.Fullname ?? "";
+                dto.InterviewerName = users.FirstOrDefault(u => u.Id == i.InterviewerId)?.Fullname ?? "";
+                dto.HRName = users.FirstOrDefault(u => u.Id == i.HrId)?.Fullname ?? "";
+                return dto;
+            }).ToList();
+            return Ok(interviewDtos);
         }
 
         [HttpGet("{id:Guid}")]
@@ -33,7 +56,11 @@ namespace HRSystem.API.Controllers
         {
             var interview = await interviewRepository.GetByIdAsync(id);
             if (interview == null) return NotFound();
-            return Ok(mapper.Map<InterviewDto>(interview));
+            var dto = mapper.Map<InterviewDto>(interview);
+            dto.CandidateName = candidates.FirstOrDefault(c => c.Id == interview.CandidateId)?.Fullname ?? "";
+            dto.InterviewerName = users.FirstOrDefault(u => u.Id == interview.InterviewerId)?.Fullname ?? "";
+            dto.HRName = users.FirstOrDefault(u => u.Id == interview.HrId)?.Fullname ?? "";
+            return Ok(dto);
         }
 
         [HttpPost]

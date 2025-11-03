@@ -1,0 +1,68 @@
+@page "/candidates/add"
+@inject HRSystem.UI.Services.CandidateService CandidateService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Add Candidate</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@addCandidateModel" OnValidSubmit="HandleAddCandidate">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="addCandidateModel.Fullname" placeholder="Full Name" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="addCandidateModel.Email" placeholder="Email" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="addCandidateModel.Phone" placeholder="Phone" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputFile class="form-control" OnChange="HandleFileChange" />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Add</button>
+                        <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
+                    </EditForm>
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private HRSystem.UI.DTOs.AddCandidateRequestDto addCandidateModel = new();
+    private IBrowserFile addResumeFile;
+    private string errorMessage;
+
+    private void HandleFileChange(InputFileChangeEventArgs e)
+    {
+        addResumeFile = e.File;
+    }
+
+    private async Task HandleAddCandidate()
+    {
+        var success = await CandidateService.AddAsync(addCandidateModel, addResumeFile);
+        if (success)
+        {
+            Navigation.NavigateTo("/candidates");
+        }
+        else
+        {
+            errorMessage = "Failed to add candidate.";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/candidates");
+    }
+}

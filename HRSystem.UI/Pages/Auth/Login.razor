@@ -1,0 +1,48 @@
+@page "/login"
+@inject HRSystem.UI.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Login</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                        <div class="mb-3">
+                            <InputText class="form-control" @bind-Value="loginModel.Username" placeholder="Username or Email" />
+                        </div>
+                        <div class="mb-3">
+                            <InputText class="form-control" @bind-Value="loginModel.Password" type="password" placeholder="Password" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </EditForm>
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private HRSystem.UI.DTOs.LoginRequestDto loginModel = new();
+    private string errorMessage;
+
+    private async Task HandleLogin()
+    {
+        var success = await AuthService.LoginAsync(loginModel);
+        if (success)
+        {
+            Navigation.NavigateTo("/candidates");
+        }
+        else
+        {
+            errorMessage = "Invalid username or password.";
+        }
+    }
+}

@@ -1,0 +1,112 @@
+@page "/interviews"
+@using HRSystem.UI.DTOs
+@inject HRSystem.UI.Services.InterviewService InterviewService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Interviews</h3>
+        <button class="btn btn-success" @onclick="NavigateToAdd">
+            <i class="bi bi-calendar-plus"></i> Add Interview
+        </button>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <input class="form-control" placeholder="Search candidate by name or email" @bind="candidateSearch" />
+        </div>
+        <div class="col-md-6">
+            <input class="form-control" placeholder="Search interviewer by name or email" @bind="interviewerSearch" />
+        </div>
+    </div>
+    @if (interviews == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <span class="ms-2">Loading...</span>
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped table-hover shadow">
+            <thead class="table-dark">
+                <tr>
+                    <th>Candidate</th>
+                    <th>Interviewer</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var interview in FilteredInterviews)
+                {
+                    <tr>
+                        <td>@interview.CandidateName</td>
+                        <td>@interview.InterviewerName</td>
+                        <td>@interview.InterviewedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@interview.Status</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm me-2" @onclick="() => NavigateToEdit(interview.Id)">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => HandleDeleteInterview(interview.Id)">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    }
+</div>
+
+@code {
+    private List<InterviewDto> interviews;
+    private string errorMessage;
+    private string candidateSearch = string.Empty;
+    private string interviewerSearch = string.Empty;
+
+    private IEnumerable<InterviewDto> FilteredInterviews =>
+        interviews == null ? Enumerable.Empty<InterviewDto>() :
+        interviews.Where(i =>
+            (string.IsNullOrWhiteSpace(candidateSearch) || (i.CandidateName?.Contains(candidateSearch, StringComparison.OrdinalIgnoreCase) == true || i.CandidateEmail?.Contains(candidateSearch, StringComparison.OrdinalIgnoreCase) == true)) &&
+            (string.IsNullOrWhiteSpace(interviewerSearch) || (i.InterviewerName?.Contains(interviewerSearch, StringComparison.OrdinalIgnoreCase) == true || i.InterviewerEmail?.Contains(interviewerSearch, StringComparison.OrdinalIgnoreCase) == true))
+        );
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInterviews();
+    }
+
+    private async Task LoadInterviews()
+    {
+        interviews = await InterviewService.GetAllAsync();
+    }
+
+    private void NavigateToAdd()
+    {
+        Navigation.NavigateTo("/interviews/add");
+    }
+
+    private void NavigateToEdit(Guid id)
+    {
+        Navigation.NavigateTo($"/interviews/edit/{id}");
+    }
+
+    private async Task HandleDeleteInterview(Guid id)
+    {
+        var success = await InterviewService.DeleteAsync(id);
+        if (success)
+        {
+            await LoadInterviews();
+        }
+        else
+        {
+            errorMessage = "Failed to delete interview.";
+        }
+    }
+}

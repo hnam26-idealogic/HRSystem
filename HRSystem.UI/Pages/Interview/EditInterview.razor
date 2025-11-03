@@ -1,0 +1,142 @@
+@page "/interviews/edit/{Id:guid}"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using HRSystem.UI.DTOs
+@inject HRSystem.UI.Services.InterviewService InterviewService
+@inject HRSystem.UI.Services.CandidateService CandidateService
+@inject HRSystem.UI.Services.UserService UserService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">Edit Interview</h3>
+                </div>
+                <div class="card-body">
+                    @if (editInterviewModel == null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span class="ms-2">Loading...</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="@editInterviewModel" OnValidSubmit="HandleEditInterview">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Candidate</label>
+                                    <input class="form-control" value="@candidates.FirstOrDefault(c => c.Id == editInterviewModel.CandidateId)?.Fullname" readonly />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Interviewer</label>
+                                    <InputSelect class="form-select" @bind-Value="editInterviewModel.InterviewerId">
+                                        <option value="">Select Interviewer</option>
+                                        @foreach (var interviewer in interviewers)
+                                        {
+                                            <option value="@interviewer.Id">@interviewer.Fullname</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>HR</label>
+                                    <input class="form-control" value="@hrs.FirstOrDefault(h => h.Id == editInterviewModel.HrId)?.Fullname" readonly />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <InputText class="form-control" @bind-Value="editInterviewModel.Job" placeholder="Job" readonly />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <InputDate class="form-control" @bind-Value="editInterviewModel.InterviewedAt" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <InputNumber class="form-control" @bind-Value="editInterviewModel.English" placeholder="English Score" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <InputNumber class="form-control" @bind-Value="editInterviewModel.Technical" placeholder="Technical Score" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <InputNumber class="form-control" @bind-Value="editInterviewModel.Recommend" placeholder="Recommend Score" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Status</label>
+                                    <InputSelect class="form-select" @bind-Value="editInterviewModel.Status">
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Pending">Pending</option>
+                                    </InputSelect>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100">Save Interview</button>
+                            <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
+                        </EditForm>
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mt-3">@errorMessage</div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private UpdateInterviewRequestDto editInterviewModel;
+    private List<CandidateDto> candidates = new();
+    private List<UserDto> interviewers = new();
+    private List<UserDto> hrs = new();
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var interview = await InterviewService.GetByIdAsync(Id);
+        // Fetch only the candidate and HR by their IDs
+        var candidate = await CandidateService.GetByIdAsync(interview.CandidateId);
+        var hr = await UserService.GetByIdAsync(interview.HrId);
+        // Fetch all interviewers for dropdown
+        var allUsers = await UserService.GetAllAsync();
+        interviewers = allUsers.Where(u => u.UserType.ToString() == "Interviewer").ToList();
+
+        candidates = candidate != null ? new List<CandidateDto> { candidate } : new List<CandidateDto>();
+        hrs = hr != null ? new List<UserDto> { hr } : new List<UserDto>();
+
+        editInterviewModel = new UpdateInterviewRequestDto
+        {
+            CandidateId = interview.CandidateId,
+            InterviewerId = interview.InterviewerId,
+            HrId = interview.HrId,
+            Job = interview.Job,
+            InterviewedAt = interview.InterviewedAt,
+            Recording = interview.Recording,                                   
+            English = interview.English,
+            Technical = interview.Technical,
+            Recommend = interview.Recommend,
+            Status = interview.Status
+        };
+        Console.WriteLine(editInterviewModel);
+    }
+
+    private async Task HandleEditInterview()
+    {
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(editInterviewModel));
+        Console.WriteLine(Id);
+        var success = await InterviewService.UpdateAsync(Id, editInterviewModel);
+        if (success)
+        {
+            Navigation.NavigateTo("/interviews");
+        }
+        else
+        {
+            errorMessage = "Failed to update interview.";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/interviews");
+    }
+}

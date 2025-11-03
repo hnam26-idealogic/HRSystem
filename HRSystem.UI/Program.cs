@@ -12,5 +12,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https:/
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CandidateService>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<InterviewService>();
+builder.Services.AddScoped<UserService>();
 
 await builder.Build().RunAsync();

@@ -1,26 +1,19 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 
-namespace HRSystem.API.Models.DTO
+namespace HRSystem.UI.DTOs
 {
-    public class UpdateInterviewRequestDto
+    public class InterviewDto
     {
-        [Required]
+        public Guid Id { get; set; }
         public string Job { get; set; } = string.Empty;
-
-        [Required]
         public Guid CandidateId { get; set; }
-
-        [Required]
+        public string CandidateName { get; set; }
         public Guid InterviewerId { get; set; }
-
-        [Required]
+        public string InterviewerName { get; set; }
         public Guid HrId { get; set; }
-
-        [Required]
+        public string HRName { get; set; }
         public DateTime InterviewedAt { get; set; }
-
-        public string Recording { get; set; } = string.Empty;
+        public string Recording { get; set; }
         public int English { get; set; }
         public int Technical { get; set; }
         public int Recommend { get; set; }

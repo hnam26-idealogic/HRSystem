@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace HRSystem.API.Models.DTO
+namespace HRSystem.UI.DTOs
 {
-    public class UpdateInterviewRequestDto
+    public class AddInterviewRequestDto
     {
         [Required]
         public string Job { get; set; } = string.Empty;

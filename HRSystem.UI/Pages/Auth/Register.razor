@@ -1,0 +1,79 @@
+@page "/register"
+@using HRSystem.UI.DTOs
+@using Microsoft.AspNetCore.Components.Forms
+@inject HRSystem.UI.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Register</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="registerModel.Username" placeholder="Username" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="registerModel.Email" placeholder="Email" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="registerModel.Password" type="password" placeholder="Password" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="registerModel.Fullname" placeholder="Full Name" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputText class="form-control" @bind-Value="registerModel.PhoneNumber" placeholder="Phone Number" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <InputSelect class="form-select" @bind-Value="registerModel.UserType">
+                                    <option value="HR">HR</option>
+                                    <option value="Interviewer">Interviewer</option>
+                                </InputSelect>
+                            </div>
+                                @if (registerModel.UserType.ToString() == "HR")
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <InputText class="form-control" @bind-Value="registerModel.AccessLevel" placeholder="Access Level" />
+                                    </div>
+                                }
+                                @if (registerModel.UserType.ToString() == "Interviewer")
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <InputText class="form-control" @bind-Value="registerModel.Specialty" placeholder="Specialty" />
+                                    </div>
+                                }
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Register</button>
+                    </EditForm>
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterRequestDto registerModel = new();
+    private string errorMessage;
+
+    private async Task HandleRegister()
+    {
+        var success = await AuthService.RegisterAsync(registerModel);
+        if (success)
+        {
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            errorMessage = "Registration failed.";
+        }
+    }
+}

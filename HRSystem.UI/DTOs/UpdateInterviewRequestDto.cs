@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace HRSystem.API.Models.DTO
+namespace HRSystem.UI.DTOs
 {
     public class UpdateInterviewRequestDto
     {
@@ -20,7 +20,7 @@ namespace HRSystem.API.Models.DTO
         [Required]
         public DateTime InterviewedAt { get; set; }
 
-        public string Recording { get; set; } = string.Empty;
+        public string Recording { get; set; }
         public int English { get; set; }
         public int Technical { get; set; }
         public int Recommend { get; set; }
