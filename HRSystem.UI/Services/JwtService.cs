@@ -35,5 +35,10 @@ namespace HRSystem.UI.Services
                 ? new AuthenticationHeaderValue("Bearer", token)
                 : null;
         }
+
+        public async Task LogoutAsync()
+        {
+            await RemoveTokenAsync();
+        }
     }
 }
