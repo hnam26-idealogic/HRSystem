@@ -13,14 +13,13 @@ namespace HRSystem.API.Controllers
     [ApiController]
     public class InterviewController : ControllerBase
     {
-    private readonly IInterviewRepository interviewRepository;
-    private readonly ICandidateRepository candidateRepository;
-    private readonly IUserRepository userRepository;
-    private readonly IMapper mapper;
-    private readonly IRecordingStorageService recordingStorageService;
-
-    private List<Models.Domain.Candidate> candidates;
-    private List<Models.Domain.User> users;
+        private readonly IInterviewRepository interviewRepository;
+        private readonly ICandidateRepository candidateRepository;
+        private readonly IUserRepository userRepository;
+        private readonly IMapper mapper;
+        private readonly IRecordingStorageService recordingStorageService;
+        private readonly List<Candidate> candidates;
+        private readonly List<User> users;
 
         public InterviewController(
             IInterviewRepository interviewRepository,

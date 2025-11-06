@@ -47,6 +47,13 @@
                             <button class="btn btn-danger btn-sm" @onclick="() => HandleDeleteInterview(interview.Id)">
                                 <i class="bi bi-trash"></i> Delete
                             </button>
+                            @if (!string.IsNullOrEmpty(interview.Recording))
+                            {
+                                <a class="btn btn-outline-primary btn-sm mt-2" href="@interview.Recording" target="_blank" download>
+                                    <i class="bi bi-download"></i> Recording
+                                </a>
+                                <audio controls class="mt-2" src="@interview.Recording" style="max-width:120px;"></audio>
+                            }
                         </td>
                     </tr>
                 }

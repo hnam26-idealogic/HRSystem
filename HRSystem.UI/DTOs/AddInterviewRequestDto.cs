@@ -22,9 +22,6 @@ namespace HRSystem.UI.DTOs
         [Required(ErrorMessage = "Interview date is required.")]
         public DateTime InterviewedAt { get; set; }
 
-        [StringLength(500, ErrorMessage = "Recording path must be less than 500 characters.")]
-        public string Recording { get; set; } = string.Empty;
-
         [Range(1, 5, ErrorMessage = "English score must be between 1 and 5.")]
         public int? English { get; set; } = null;
 
@@ -38,6 +35,6 @@ namespace HRSystem.UI.DTOs
         [StringLength(50, ErrorMessage = "Status must be less than 50 characters.")]
         public string Status { get; set; } = "Scheduled";
 
-        public IFormFile? Recording { get; set; }
+        // public IFormFile? Recording { get; set; }
     }
 }

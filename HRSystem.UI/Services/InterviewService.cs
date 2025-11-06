@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using HRSystem.UI.DTOs;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace HRSystem.UI.Services
 {
@@ -46,10 +47,29 @@ namespace HRSystem.UI.Services
             return await httpClient.GetFromJsonAsync<InterviewDto>($"/api/Interview/{id}");
         }
 
-        public async Task<bool> AddAsync(AddInterviewRequestDto dto)
+        public async Task<bool> AddAsync(AddInterviewRequestDto dto, IBrowserFile recordingFile)
         {
             await jwtService.ApplyJwtAsync(httpClient);
-            var response = await httpClient.PostAsJsonAsync("/api/Interview", dto);
+            using var form = new MultipartFormDataContent();
+            form.Add(new StringContent(dto.Job ?? string.Empty), nameof(dto.Job));
+            form.Add(new StringContent(dto.CandidateId.ToString()), nameof(dto.CandidateId));
+            form.Add(new StringContent(dto.InterviewerId.ToString()), nameof(dto.InterviewerId));
+            form.Add(new StringContent(dto.HrId.ToString()), nameof(dto.HrId));
+            form.Add(new StringContent(dto.InterviewedAt.ToString("o")), nameof(dto.InterviewedAt));
+            form.Add(new StringContent(dto.Status ?? "Scheduled"), nameof(dto.Status));
+            if (dto.English.HasValue) form.Add(new StringContent(dto.English.Value.ToString()), nameof(dto.English));
+            if (dto.Technical.HasValue) form.Add(new StringContent(dto.Technical.Value.ToString()), nameof(dto.Technical));
+            if (dto.Recommend.HasValue) form.Add(new StringContent(dto.Recommend.Value.ToString()), nameof(dto.Recommend));
+   
+            // If recording file is present, add it
+            if (recordingFile != null)
+            {
+                var stream = recordingFile.OpenReadStream();
+                var fileContent = new StreamContent(stream);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recordingFile.ContentType);
+                form.Add(fileContent, "Recording", recordingFile.Name);
+            }
+            var response = await httpClient.PostAsync("/api/Interview", form);
             return response.IsSuccessStatusCode;
         }
 

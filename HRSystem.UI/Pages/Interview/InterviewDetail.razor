@@ -39,6 +39,20 @@
                             <dd class="col-sm-8">@interview.Recommend</dd>
                             <dt class="col-sm-4">Status</dt>
                             <dd class="col-sm-8">@interview.Status</dd>
+                            <dt class="col-sm-4">Recording</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(interview.Recording))
+                                {
+                                    <a class="btn btn-outline-primary btn-sm" href="@interview.Recording" target="_blank" download>
+                                        <i class="bi bi-download"></i> Download Recording
+                                    </a>
+                                    <audio controls class="mt-2" src="@interview.Recording"></audio>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No recording available.</span>
+                                }
+                            </dd>
                         </dl>
                         <button class="btn btn-secondary mt-3" @onclick="NavigateBack">Back</button>
                     }

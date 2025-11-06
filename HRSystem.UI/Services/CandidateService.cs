@@ -20,14 +20,6 @@ namespace HRSystem.UI.Services
             this.jwtService = jwtService;
         }
 
-        private async Task AddJwtHeaderAsync()
-        {
-            var token = await jwtService.GetTokenAsync();
-            httpClient.DefaultRequestHeaders.Authorization = token != null
-                ? new AuthenticationHeaderValue("Bearer", token)
-                : null;
-        }
-
         public async Task<List<CandidateDto>> GetAllAsync(int page = 1, int size = 10)
         {
             await jwtService.ApplyJwtAsync(httpClient);

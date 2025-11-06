@@ -2,6 +2,8 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using HRSystem.UI.DTOs;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace HRSystem.UI.Services
 {
@@ -35,6 +37,22 @@ namespace HRSystem.UI.Services
         {
             var response = await httpClient.PostAsJsonAsync("/api/Auth/register", registerDto);
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<Guid?> GetCurrentUserIdAsync()
+        {
+            var token = await jwtService.GetTokenAsync();
+            if (string.IsNullOrEmpty(token))
+                return null;
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+
+            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "sub" || c.Type == "id");
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+                return userId;
+
+            return null;
         }
     }
 }

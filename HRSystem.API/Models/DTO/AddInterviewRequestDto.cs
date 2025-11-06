@@ -22,9 +22,6 @@ namespace HRSystem.API.Models.DTO
         [Required]
         public DateTime InterviewedAt { get; set; }
 
-        [StringLength(500)]
-        public string Recording { get; set; } = string.Empty;
-
         [Range(1, 5, ErrorMessage = "English score must be between 1 and 5.")]
         public int? English { get; set; } = null;
 

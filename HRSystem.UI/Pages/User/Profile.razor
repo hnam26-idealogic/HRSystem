@@ -39,7 +39,10 @@ else
         var userId = await AuthService.GetCurrentUserIdAsync();
         if (userId != Guid.Empty)
         {
-            user = await UserService.GetByIdAsync(userId);
+            @* user = await UserService.GetByIdAsync(userId.Value); // Only if userId is not null
+
+            // Or, safer: *@
+            user = await UserService.GetByIdAsync(userId ?? Guid.Empty);
         }
         else
         {

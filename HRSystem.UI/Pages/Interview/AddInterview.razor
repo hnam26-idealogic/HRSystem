@@ -123,12 +123,6 @@
     private async Task HandleAddInterview()
     {
         errorMessage = string.Empty;
-        // Attach recording file to model if present
-        if (recordingFile != null)
-        {
-            // You may need to convert IBrowserFile to IFormFile or handle in service
-            addInterviewModel.Recording = recordingFile;
-        }
         var success = await InterviewService.AddAsync(addInterviewModel, recordingFile);
         if (success)
         {

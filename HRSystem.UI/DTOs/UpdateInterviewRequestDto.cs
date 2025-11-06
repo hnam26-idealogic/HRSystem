@@ -21,7 +21,7 @@ namespace HRSystem.UI.DTOs
         [Required]
         public DateTime InterviewedAt { get; set; }
 
-        public IFormFile? Recording { get; set; }
+        // public IFormFile? Recording { get; set; }
         public int English { get; set; }
         public int Technical { get; set; }
         public int Recommend { get; set; }

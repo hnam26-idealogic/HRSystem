@@ -9,6 +9,6 @@ namespace HRSystem.UI.DTOs
         public string Fullname { get; set; } = string.Empty;
         [Required]
         public string Phone { get; set; } = string.Empty;
-        public IFormFile? Resume { get; set; }
+        // public IFormFile? Resume { get; set; }
     }
 }
