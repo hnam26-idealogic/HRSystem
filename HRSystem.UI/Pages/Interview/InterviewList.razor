@@ -26,6 +26,7 @@
                     <th>Interviewer</th>
                     <th>Date</th>
                     <th>Status</th>
+                    <th>Recording</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -38,6 +39,19 @@
                         <td>@interview.InterviewedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>@interview.Status</td>
                         <td>
+                            @if (!string.IsNullOrEmpty(interview.Recording))
+                            {
+                                <a class="btn btn-outline-primary btn-sm" href="@interview.Recording" target="_blank" download>
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                                <audio controls class="mt-2" src="@interview.Recording" style="max-width:120px;"></audio>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No recording</span>
+                            }
+                        </td>
+                        <td>
                             <button class="btn btn-info btn-sm me-2" @onclick="() => NavigateToDetail(interview.Id)">
                                 <i class="bi bi-eye"></i> View
                             </button>
@@ -47,13 +61,6 @@
                             <button class="btn btn-danger btn-sm" @onclick="() => HandleDeleteInterview(interview.Id)">
                                 <i class="bi bi-trash"></i> Delete
                             </button>
-                            @if (!string.IsNullOrEmpty(interview.Recording))
-                            {
-                                <a class="btn btn-outline-primary btn-sm mt-2" href="@interview.Recording" target="_blank" download>
-                                    <i class="bi bi-download"></i> Recording
-                                </a>
-                                <audio controls class="mt-2" src="@interview.Recording" style="max-width:120px;"></audio>
-                            }
                         </td>
                     </tr>
                 }
