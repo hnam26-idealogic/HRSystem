@@ -68,6 +68,14 @@
                                 <InputText class="form-control" @bind-Value="addInterviewModel.Status" placeholder="Status" />
                             </div> *@
                         </div>
+                        <div class="col-md-12 mb-3">
+                            <label>Upload Recording</label>
+                            <InputFile class="form-control" OnChange="HandleRecordingChange" accept="audio/*,video/*" />
+                            @if (!string.IsNullOrEmpty(recordingErrorMessage))
+                            {
+                                <div class="text-danger mt-1">@recordingErrorMessage</div>
+                            }
+                        </div>
                         <button type="submit" class="btn btn-success w-100">Add Interview</button>
                         <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
                     </EditForm>
@@ -86,7 +94,8 @@
     private List<CandidateDto> candidates = new();
     private List<UserDto> interviewers = new();
     private List<UserDto> hrs = new();
-    
+    private IBrowserFile recordingFile;
+    private string recordingErrorMessage;
     private string errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -97,9 +106,30 @@
         hrs = users.Where(u => u.UserType == "HR").ToList();
     }
 
+    private void HandleRecordingChange(InputFileChangeEventArgs e)
+    {
+        recordingErrorMessage = string.Empty;
+        var file = e.File;
+        if (file == null)
+        {
+            recordingErrorMessage = "Please select a recording file.";
+            recordingFile = null;
+            return;
+        }
+        // Optionally check file type/size here
+        recordingFile = file;
+    }
+
     private async Task HandleAddInterview()
     {
-        var success = await InterviewService.AddAsync(addInterviewModel);
+        errorMessage = string.Empty;
+        // Attach recording file to model if present
+        if (recordingFile != null)
+        {
+            // You may need to convert IBrowserFile to IFormFile or handle in service
+            addInterviewModel.Recording = recordingFile;
+        }
+        var success = await InterviewService.AddAsync(addInterviewModel, recordingFile);
         if (success)
         {
             Navigation.NavigateTo("/interviews");

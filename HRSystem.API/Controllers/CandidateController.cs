@@ -62,7 +62,7 @@ namespace HRSystem.API.Controllers
 
             var candidateEntity = mapper.Map<Candidate>(addCandidateRequestDto);
 
-            var (resumePath, _) = await fileStorageService.UploadAsync(addCandidateRequestDto.Resume!);
+            var (resumePath, file) = await fileStorageService.UploadAsync(addCandidateRequestDto.Resume!);
             candidateEntity.ResumePath = resumePath;
 
             var createdCandidate = await candidateRepository.AddAsync(candidateEntity);

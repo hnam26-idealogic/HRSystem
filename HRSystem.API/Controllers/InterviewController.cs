@@ -5,6 +5,7 @@ using HRSystem.API.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using HRSystem.API.CustomActionFilters;
+using HRSystem.API.Services;
 
 namespace HRSystem.API.Controllers
 {
@@ -16,6 +17,7 @@ namespace HRSystem.API.Controllers
     private readonly ICandidateRepository candidateRepository;
     private readonly IUserRepository userRepository;
     private readonly IMapper mapper;
+    private readonly IRecordingStorageService recordingStorageService;
 
     private List<Models.Domain.Candidate> candidates;
     private List<Models.Domain.User> users;
@@ -24,12 +26,14 @@ namespace HRSystem.API.Controllers
             IInterviewRepository interviewRepository,
             ICandidateRepository candidateRepository,
             IUserRepository userRepository,
-            IMapper mapper)
+            IMapper mapper,
+            IRecordingStorageService recordingStorageService)
         {
             this.interviewRepository = interviewRepository;
             this.candidateRepository = candidateRepository;
             this.userRepository = userRepository;
             this.mapper = mapper;
+            this.recordingStorageService = recordingStorageService;
 
             // Fetch all candidates and users once for name mapping
             candidates = candidateRepository.GetAllAsync().Result.Items.ToList();
@@ -70,9 +74,16 @@ namespace HRSystem.API.Controllers
 
         [HttpPost]
         [ValidateModel]
-        public async Task<IActionResult> Add([FromBody] AddInterviewRequestDto addInterviewRequestDto)
+        public async Task<IActionResult> Add([FromForm] AddInterviewRequestDto addInterviewRequestDto)
         {
             var interviewEntity = mapper.Map<Interview>(addInterviewRequestDto);
+
+            if (addInterviewRequestDto.Recording != null)
+            {
+                var (recordingPath, _) = await recordingStorageService.UploadAsync(addInterviewRequestDto.Recording);
+                interviewEntity.Recording = recordingPath;
+            }
+
             var createdInterview = await interviewRepository.AddAsync(interviewEntity);
             var createdInterviewDto = mapper.Map<InterviewDto>(createdInterview);
             return CreatedAtAction(nameof(GetById), new { id = createdInterviewDto.Id }, createdInterviewDto);
@@ -80,9 +91,16 @@ namespace HRSystem.API.Controllers
 
         [HttpPut("{id:Guid}")]
         [ValidateModel]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInterviewRequestDto updateInterviewRequestDto)
+        public async Task<IActionResult> Update(Guid id, [FromForm] UpdateInterviewRequestDto updateInterviewRequestDto)
         {
             var interviewEntity = mapper.Map<Interview>(updateInterviewRequestDto);
+
+            if (updateInterviewRequestDto.Recording != null)
+            {
+                var (recordingPath, _) = await recordingStorageService.UploadAsync(updateInterviewRequestDto.Recording);
+                interviewEntity.Recording = recordingPath;
+            }
+
             var updatedInterview = await interviewRepository.UpdateAsync(id, interviewEntity);
             var updatedInterviewDto = mapper.Map<InterviewDto>(updatedInterview);
             return Ok(updatedInterviewDto);

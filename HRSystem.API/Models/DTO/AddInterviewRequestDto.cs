@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace HRSystem.API.Models.DTO
 {
@@ -36,5 +37,7 @@ namespace HRSystem.API.Models.DTO
         [Required]
         [StringLength(50)]
         public string Status { get; set; } = "Scheduled";
+
+        public IFormFile? Recording { get; set; }
     }
 }

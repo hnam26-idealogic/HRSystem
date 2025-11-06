@@ -22,7 +22,11 @@
                                 <InputText class="form-control" @bind-Value="addCandidateModel.Phone" placeholder="Phone" />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <InputFile class="form-control" OnChange="HandleFileChange" />
+                                <InputFile class="form-control" OnChange="HandleFileChange" accept="application/pdf" />
+                                @if (!string.IsNullOrEmpty(fileErrorMessage))
+                                {
+                                    <div class="text-danger mt-1">@fileErrorMessage</div>
+                                }
                             </div>
                         </div>
                         <button type="submit" class="btn btn-success w-100">Add</button>
@@ -42,14 +46,35 @@
     private HRSystem.UI.DTOs.AddCandidateRequestDto addCandidateModel = new();
     private IBrowserFile addResumeFile;
     private string errorMessage;
+    private string fileErrorMessage;
 
     private void HandleFileChange(InputFileChangeEventArgs e)
     {
-        addResumeFile = e.File;
+        var file = e.File;
+        fileErrorMessage = string.Empty;
+        if (file == null)
+        {
+            fileErrorMessage = "Please select a file.";
+            addResumeFile = null;
+            return;
+        }
+        if (file.ContentType != "application/pdf")
+        {
+            fileErrorMessage = "Only PDF files are allowed.";
+            addResumeFile = null;
+            return;
+        }
+        addResumeFile = file;
     }
 
     private async Task HandleAddCandidate()
     {
+        errorMessage = string.Empty;
+        if (addResumeFile == null)
+        {
+            errorMessage = "Please select a valid PDF file.";
+            return;
+        }
         var success = await CandidateService.AddAsync(addCandidateModel, addResumeFile);
         if (success)
         {

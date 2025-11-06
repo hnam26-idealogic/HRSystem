@@ -25,9 +25,8 @@ namespace HRSystem.API.Services
             if (file == null || file.Length == 0)
                 throw new ArgumentException("No file uploaded.");
 
-            //if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) ||
-            //    file.ContentType != "application/pdf")
-            //    throw new InvalidOperationException("Only PDF files are allowed.");
+            if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+               throw new InvalidOperationException("Only PDF files are allowed.");
 
             var uploadsFolder = Path.Combine(webHostEnvironment.ContentRootPath,
                 "Resumes");

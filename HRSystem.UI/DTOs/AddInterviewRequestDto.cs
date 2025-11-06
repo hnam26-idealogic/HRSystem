@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace HRSystem.UI.DTOs
 {
@@ -36,5 +37,7 @@ namespace HRSystem.UI.DTOs
         [Required(ErrorMessage = "Status is required.")]
         [StringLength(50, ErrorMessage = "Status must be less than 50 characters.")]
         public string Status { get; set; } = "Scheduled";
+
+        public IFormFile? Recording { get; set; }
     }
 }

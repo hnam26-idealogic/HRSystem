@@ -22,6 +22,8 @@ namespace HRSystem.API.Models.Domain
         public User HR { get; set; } = null!; // HR is a User
 
         public DateTime InterviewedAt { get; set; }
+        [NotMapped]
+        public IFormFile RecordingFile { get; set; }
         public string Recording { get; set; } = string.Empty;
         public int English { get; set; }
         public int Technical { get; set; }

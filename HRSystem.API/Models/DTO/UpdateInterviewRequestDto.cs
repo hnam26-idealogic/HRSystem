@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace HRSystem.API.Models.DTO
 {
@@ -20,7 +21,7 @@ namespace HRSystem.API.Models.DTO
         [Required]
         public DateTime InterviewedAt { get; set; }
 
-        public string Recording { get; set; } = string.Empty;
+        public IFormFile? Recording { get; set; } = null;
         public int English { get; set; }
         public int Technical { get; set; }
         public int Recommend { get; set; }
