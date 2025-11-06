@@ -38,7 +38,7 @@
         var success = await AuthService.LoginAsync(loginModel);
         if (success)
         {
-            Navigation.NavigateTo("/candidates");
+            Navigation.NavigateTo("/profile", true);
         }
         else
         {
