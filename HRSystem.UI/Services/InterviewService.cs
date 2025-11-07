@@ -86,5 +86,14 @@ namespace HRSystem.UI.Services
             var response = await httpClient.DeleteAsync($"/api/Interview/{id}");
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<List<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10)
+        {
+            await jwtService.ApplyJwtAsync(httpClient);
+            var response = await httpClient.GetAsync($"/api/Interview/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
+            if (!response.IsSuccessStatusCode) return new List<InterviewDto>();
+            var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
+            return result?.Items ?? new List<InterviewDto>();
+        }
     }
 }

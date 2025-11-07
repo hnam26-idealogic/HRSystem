@@ -69,5 +69,24 @@ namespace HRSystem.API.Repositories
             await dbContext.SaveChangesAsync();
             return true;
         }
+
+        public async Task<(IEnumerable<Interview> Items, int TotalCount)> SearchAsync(string query, int page = 1, int size = 10)
+        {
+            var normalizedQuery = query?.Trim().ToLower();
+            var interviewsQuery = dbContext.Interviews
+                .Where(i =>
+                    dbContext.Candidates.Any(c => c.Id == i.CandidateId && c.Fullname.ToLower().Contains(normalizedQuery)) ||
+                    dbContext.Users.Any(u => u.Id == i.InterviewerId && u.Fullname.ToLower().Contains(normalizedQuery)) ||
+                    dbContext.Candidates.Any(c => c.Id == i.CandidateId && c.Email.ToLower().Contains(normalizedQuery)) ||
+                    dbContext.Users.Any(u => u.Id == i.InterviewerId && u.Email.ToLower().Contains(normalizedQuery))
+                );
+            var totalCount = await interviewsQuery.CountAsync();
+            var items = await interviewsQuery
+                .OrderBy(i => i.InterviewedAt)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+            return (items, totalCount);
+        }
     }
 }

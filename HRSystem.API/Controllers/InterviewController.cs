@@ -112,5 +112,25 @@ namespace HRSystem.API.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int p = 1, [FromQuery] int size = 10)
+        {
+            var (interviews, totalCount) = await interviewRepository.SearchAsync(query, p, size);
+            var interviewDtos = mapper.Map<List<InterviewDto>>(interviews);
+            foreach (var dto in interviewDtos)
+            {
+                dto.CandidateName = candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
+                dto.InterviewerName = users.FirstOrDefault(u => u.Id == dto.InterviewerId)?.Fullname ?? "";
+                dto.HRName = users.FirstOrDefault(u => u.Id == dto.HrId)?.Fullname ?? "";
+            }
+            return Ok(new
+            {
+                TotalCount = totalCount,
+                PageNumber = p,
+                PageSize = size,
+                Items = interviewDtos
+            });
+        }
     }
 }
