@@ -1,5 +1,6 @@
 @page "/interviewers/add"
-@inject HRSystem.UI.Services.UserService UserService
+@using HRSystem.UI.Models
+@inject HRSystem.UI.Services.AuthService AuthService
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
@@ -10,32 +11,32 @@
                     <h3 class="mb-0">Add Interviewer</h3>
                 </div>
                 <div class="card-body">
-                    <EditForm Model="@addInterviewerModel" OnValidSubmit="HandleAddInterviewer">
+                    <EditForm Model="@registerRequestDto" OnValidSubmit="HandleAddInterviewer">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
-                            <InputText id="username" class="form-control" @bind-Value="addInterviewerModel.Username" placeholder="Username" />
+                            <InputText id="username" class="form-control" @bind-Value="registerRequestDto.Username" placeholder="Username" />
                         </div>
                         <div class="mb-3">
                             <label for="fullname" class="form-label">Full Name</label>
-                            <InputText id="fullname" class="form-control" @bind-Value="addInterviewerModel.Fullname" placeholder="Full Name" />
+                            <InputText id="fullname" class="form-control" @bind-Value="registerRequestDto.Fullname" placeholder="Full Name" />
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <InputText id="email" class="form-control" @bind-Value="addInterviewerModel.Email" placeholder="Email" />
+                            <InputText id="email" class="form-control" @bind-Value="registerRequestDto.Email" placeholder="Email" />
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <InputText id="password" type="password" class="form-control" @bind-Value="addInterviewerModel.Password" placeholder="Password" />
+                            <InputText id="password" type="password" class="form-control" @bind-Value="registerRequestDto.Password" placeholder="Password" />
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Phone Number</label>
-                            <InputText id="phone" class="form-control" @bind-Value="addInterviewerModel.PhoneNumber" placeholder="Phone Number" />
+                            <InputText id="phone" class="form-control" @bind-Value="registerRequestDto.PhoneNumber" placeholder="Phone Number" />
                         </div>
                         <div class="mb-3">
                             <label for="specialty" class="form-label">Specialty</label>
-                            <InputText id="specialty" class="form-control" @bind-Value="addInterviewerModel.Specialty" placeholder="Specialty" />
+                            <InputText id="specialty" class="form-control" @bind-Value="registerRequestDto.Specialty" placeholder="Specialty" />
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Add</button>
                         <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
@@ -51,12 +52,12 @@
 </div>
 
 @code {
-    private HRSystem.UI.DTOs.AddUserRequestDto addInterviewerModel = new() { UserType = "Interviewer" };
+    private HRSystem.UI.DTOs.RegisterRequestDto registerRequestDto = new() { UserType = UserType.Interviewer };
     private string errorMessage;
 
     private async Task HandleAddInterviewer()
     {
-        var success = await UserService.AddAsync(addInterviewerModel);
+        var success = await AuthService.RegisterAsync(registerRequestDto);
         if (success)
         {
             Navigation.NavigateTo("/interviewers");

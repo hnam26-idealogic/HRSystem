@@ -73,10 +73,28 @@ namespace HRSystem.UI.Services
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> UpdateAsync(Guid id, UpdateInterviewRequestDto dto)
+        public async Task<bool> UpdateAsync(Guid id, UpdateInterviewRequestDto dto, IBrowserFile recordingFile)
         {
             await jwtService.ApplyJwtAsync(httpClient);
-            var response = await httpClient.PutAsJsonAsync($"/api/Interview/{id}", dto);
+            var content = new MultipartFormDataContent();
+            content.Add(new StringContent(dto.Job ?? string.Empty), "Job");
+            content.Add(new StringContent(dto.CandidateId.ToString()), "CandidateId");
+            content.Add(new StringContent(dto.InterviewerId.ToString()), "InterviewerId");
+            content.Add(new StringContent(dto.HrId.ToString()), "HrId");
+            content.Add(new StringContent(dto.InterviewedAt.ToString("o")), "InterviewedAt");
+            content.Add(new StringContent(dto.Status ?? "Scheduled"), "Status");
+            content.Add(new StringContent(dto.English.ToString()), "English");
+            content.Add(new StringContent(dto.Technical.ToString()), "Technical");
+            content.Add(new StringContent(dto.Recommend.ToString()), "Recommend");
+            // If recording file is present, add it
+            if (recordingFile != null)
+            {
+                var stream = recordingFile.OpenReadStream();
+                var fileContent = new StreamContent(stream);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recordingFile.ContentType);
+                content.Add(fileContent, "Recording", recordingFile.Name);
+            }
+            var response = await httpClient.PutAsync($"/api/Interview/{id}", content);
             return response.IsSuccessStatusCode;
         }
                           

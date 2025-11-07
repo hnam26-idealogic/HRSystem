@@ -1,10 +1,12 @@
 @page "/interviews/edit/{Id:guid}"
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 @using HRSystem.UI.DTOs
 @inject HRSystem.UI.Services.InterviewService InterviewService
 @inject HRSystem.UI.Services.CandidateService CandidateService
 @inject HRSystem.UI.Services.UserService UserService
+@inject HRSystem.UI.Services.AuthService AuthService
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
@@ -26,48 +28,95 @@
                     {
                         <EditForm Model="@editInterviewModel" OnValidSubmit="HandleEditInterview">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label>Candidate</label>
-                                    <input class="form-control" value="@candidates.FirstOrDefault(c => c.Id == editInterviewModel.CandidateId)?.Fullname" readonly />
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>Interviewer</label>
-                                    <InputSelect class="form-select" @bind-Value="editInterviewModel.InterviewerId">
-                                        <option value="">Select Interviewer</option>
-                                        @foreach (var interviewer in interviewers)
+                                @if (IsInterviewer)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <label>Upload New Recording</label>
+                                        <InputFile class="form-control" OnChange="HandleEditRecordingChange" accept="audio/*,video/*" />
+                                        @if (!string.IsNullOrEmpty(currentRecordingPath))
                                         {
-                                            <option value="@interviewer.Id">@interviewer.Fullname</option>
+                                            <div class="mt-2">
+                                                <a class="btn btn-outline-primary btn-sm me-1" href="@currentRecordingPath" target="_blank">
+                                                    <i class="bi bi-eye"></i>Current Recording
+                                                </a>
+                                            </div>
                                         }
-                                    </InputSelect>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>HR</label>
-                                    <input class="form-control" value="@hrs.FirstOrDefault(h => h.Id == editInterviewModel.HrId)?.Fullname" readonly />
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <InputText class="form-control" @bind-Value="editInterviewModel.Job" placeholder="Job" readonly />
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <InputDate class="form-control" @bind-Value="editInterviewModel.InterviewedAt" />
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <InputNumber class="form-control" @bind-Value="editInterviewModel.English" placeholder="English Score" />
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <InputNumber class="form-control" @bind-Value="editInterviewModel.Technical" placeholder="Technical Score" />
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <InputNumber class="form-control" @bind-Value="editInterviewModel.Recommend" placeholder="Recommend Score" />
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>Status</label>
-                                    <InputSelect class="form-select" @bind-Value="editInterviewModel.Status">
-                                        <option value="Scheduled">Scheduled</option>
-                                        <option value="Completed">Completed</option>
-                                        <option value="Cancelled">Cancelled</option>
-                                        <option value="Pending">Pending</option>
-                                    </InputSelect>
-                                </div>
+                                        @if (!string.IsNullOrEmpty(recordingErrorMessage))
+                                        {
+                                            <div class="text-danger mt-1">@recordingErrorMessage</div>
+                                        }
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <InputNumber class="form-control" @bind-value="editInterviewModel.English" placeholder="English Score" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <InputNumber class="form-control" @bind-value="editInterviewModel.Technical" placeholder="Technical Score" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <InputNumber class="form-control" @bind-value="editInterviewModel.Recommend" placeholder="Recommend Score" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <label>Candidate</label>
+                                        <input class="form-control" value="@candidates.FirstOrDefault(c => c.Id == editInterviewModel.CandidateId)?.Fullname" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label>Interviewer</label>
+                                        <InputSelect class="form-select" @bind-value="editInterviewModel.InterviewerId">
+                                            <option value="">Select Interviewer</option>
+                                            @foreach (var interviewer in interviewers)
+                                            {
+                                                <option value="@interviewer.Id">@interviewer.Fullname</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label>HR</label>
+                                        <input class="form-control" value="@hrs.FirstOrDefault(h => h.Id == editInterviewModel.HrId)?.Fullname" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <InputText class="form-control" @bind-value="editInterviewModel.Job" placeholder="Job" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <InputDate class="form-control" @bind-value="editInterviewModel.InterviewedAt" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <InputNumber class="form-control" @bind-value="editInterviewModel.English" placeholder="English Score" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <InputNumber class="form-control" @bind-value="editInterviewModel.Technical" placeholder="Technical Score" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <InputNumber class="form-control" @bind-value="editInterviewModel.Recommend" placeholder="Recommend Score" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label>Status</label>
+                                        <InputSelect class="form-select" @bind-value="editInterviewModel.Status">
+                                            <option value="Scheduled">Scheduled</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Pending">Pending</option>
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label>Upload New Recording</label>
+                                        <InputFile class="form-control" OnChange="HandleEditRecordingChange" accept="audio/*,video/*" />
+                                        @if (!string.IsNullOrEmpty(currentRecordingPath))
+                                        {
+                                            <div class="mt-2">
+                                                <a class="btn btn-outline-primary btn-sm me-1" href="@currentRecordingPath" target="_blank">
+                                                    <i class="bi bi-eye"></i>Current Recording
+                                                </a>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(recordingErrorMessage))
+                                        {
+                                            <div class="text-danger mt-1">@recordingErrorMessage</div>
+                                        }
+                                    </div>
+                                }
                             </div>
                             <button type="submit" class="btn btn-warning w-100">Save Interview</button>
                             <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
@@ -89,7 +138,11 @@
     private List<CandidateDto> candidates = new();
     private List<UserDto> interviewers = new();
     private List<UserDto> hrs = new();
+    private IBrowserFile editRecordingFile;
     private string errorMessage;
+    private string currentRecordingPath;
+    private string recordingErrorMessage;
+    private bool IsInterviewer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,20 +164,40 @@
             HrId = interview.HrId,
             Job = interview.Job,
             InterviewedAt = interview.InterviewedAt,
-            // Recording = interview.Recording,                                   
             English = interview.English,
             Technical = interview.Technical,
             Recommend = interview.Recommend,
             Status = interview.Status
         };
+        currentRecordingPath = interview.Recording;
+
+        // Get current user id and user type
+        var currentUserId = await AuthService.GetCurrentUserIdAsync() ?? Guid.Empty;
+        var currentUser = await UserService.GetByIdAsync(currentUserId);
+        IsInterviewer = currentUser != null && currentUser.UserType.ToString() == "Interviewer";
+
         Console.WriteLine(editInterviewModel);
+    }
+
+    private void HandleEditRecordingChange(InputFileChangeEventArgs e)
+    {
+        recordingErrorMessage = string.Empty;
+        var file = e.File;
+        if (file == null)
+        {
+            recordingErrorMessage = "Please select a recording file.";
+            editRecordingFile = null;
+            return;
+        }
+        // Optionally check file type/size here
+        editRecordingFile = file;
     }
 
     private async Task HandleEditInterview()
     {
         Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(editInterviewModel));
         Console.WriteLine(Id);
-        var success = await InterviewService.UpdateAsync(Id, editInterviewModel);
+        var success = await InterviewService.UpdateAsync(Id, editInterviewModel, editRecordingFile);
         if (success)
         {
             Navigation.NavigateTo("/interviews");

@@ -25,6 +25,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
+        [Authorize (Roles = "HR, Interviewer")]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
             var (pagedUsers, totalCount) = await userRepository.GetAllAsync(p, size);
@@ -39,6 +40,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet("{id:Guid}")]
+        [Authorize (Roles = "HR, Interviewer")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             var userEntity = await userRepository.GetByIdAsync(id);
@@ -59,6 +61,7 @@ namespace HRSystem.API.Controllers
 
         [HttpPut("{id:Guid}")]
         [ValidateModel]
+        [Authorize (Roles = "HR")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateUserRequestDto updateUserRequestDto)
         {
             var userEntity = mapper.Map<User>(updateUserRequestDto);
@@ -68,6 +71,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
+        [Authorize (Roles = "HR")]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             var deletedUser = await userRepository.DeleteAsync(id);

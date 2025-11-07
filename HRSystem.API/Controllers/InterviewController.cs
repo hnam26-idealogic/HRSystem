@@ -40,6 +40,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
+        [Authorize (Roles = "HR, Interviewer")]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
             var (pagedInterviews, totalCount) = await interviewRepository.GetAllAsync(p, size);
@@ -60,6 +61,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet("{id:Guid}")]
+        [Authorize (Roles = "HR, Interviewer")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var interview = await interviewRepository.GetByIdAsync(id);
@@ -73,6 +75,7 @@ namespace HRSystem.API.Controllers
 
         [HttpPost]
         [ValidateModel]
+        [Authorize (Roles = "HR")]
         public async Task<IActionResult> Add([FromForm] AddInterviewRequestDto addInterviewRequestDto)
         {
             var interviewEntity = mapper.Map<Interview>(addInterviewRequestDto);
@@ -89,6 +92,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
+        [Authorize (Roles = "HR, Interviewer")]
         [ValidateModel]
         public async Task<IActionResult> Update(Guid id, [FromForm] UpdateInterviewRequestDto updateInterviewRequestDto)
         {
@@ -106,6 +110,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
+        [Authorize (Roles = "HR")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var deleted = await interviewRepository.DeleteAsync(id);
@@ -114,6 +119,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet("search")]
+        [Authorize (Roles = "HR, Interviewer")]
         public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int p = 1, [FromQuery] int size = 10)
         {
             var (interviews, totalCount) = await interviewRepository.SearchAsync(query, p, size);

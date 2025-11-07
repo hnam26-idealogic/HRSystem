@@ -18,7 +18,7 @@ namespace HRSystem.API.Services
 
         public async Task<(string recordingPath, byte[] recordingBytes)> UploadAsync(IFormFile file)
         {
-            if (file == null || file.Length == 0)
+            if (file == null)
                 throw new ArgumentException("No file uploaded.");
 
             // Accept common audio/video types (adjust as needed)

@@ -110,6 +110,12 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/Resumes"
 });
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Recordings")),
+    RequestPath = "/Recordings"
+});
+
 app.MapControllers();
 
 app.Run();
