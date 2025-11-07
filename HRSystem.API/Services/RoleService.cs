@@ -27,6 +27,7 @@ public class RoleService : IRoleService
     public async Task AssignRoleAsync(User user, string roleName)
     {
         var result = await userManager.AddToRoleAsync(user, roleName);
+        bool isInRole = await userManager.IsInRoleAsync(user, "HR");
         if (!result.Succeeded)
             throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
     }

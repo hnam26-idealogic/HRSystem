@@ -4,6 +4,7 @@ using HRSystem.API.Models.Domain;
 using HRSystem.API.Models.DTO;
 using HRSystem.API.Repositories;
 using HRSystem.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "HR")]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
             var (pagedCandidates, totalCount) = await candidateRepository.GetAllAsync(p, size);
@@ -39,6 +41,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet("{id:Guid}")]
+        [Authorize(Roles = "HR, Interviewer")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             var candidate = await candidateRepository.GetByIdAsync(id);
@@ -48,6 +51,7 @@ namespace HRSystem.API.Controllers
 
         [HttpPost]
         [ValidateModel]
+        [Authorize(Roles = "HR")]
         public async Task<IActionResult> Add([FromForm] AddCandidateRequestDto addCandidateRequestDto)
         {
             // Check if email exists
@@ -72,6 +76,7 @@ namespace HRSystem.API.Controllers
 
         [HttpPut("{id:Guid}")]
         [ValidateModel]
+        [Authorize(Roles = "HR")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] UpdateCandidateRequestDto updateCandidateRequestDto)
         {
             // Optionally require resume on update
@@ -92,11 +97,27 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
+        [Authorize(Roles = "HR")]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             var deleted = await candidateRepository.DeleteAsync(id);
             if (!deleted) return NotFound();
             return NoContent();
+        }
+
+        [HttpGet("search")]
+        [Authorize(Roles = "HR, Interviewer")]
+        public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int p = 1, [FromQuery] int size = 10)
+        {
+            var (candidates, totalCount) = await candidateRepository.SearchAsync(query, p, size);
+            var candidateDtos = mapper.Map<List<CandidateDto>>(candidates);
+            return Ok(new
+            {
+                TotalCount = totalCount,
+                PageNumber = p,
+                PageSize = size,
+                Items = candidateDtos
+            });
         }
     }
 }

@@ -25,7 +25,7 @@ namespace HRSystem.API.Models.Domain
         public DateTime InterviewedAt { get; set; }
         [NotMapped]
         public IFormFile RecordingFile { get; set; }
-        public string Recording { get; set; } = string.Empty;
+        public string? Recording { get; set; } = string.Empty;
         public int English { get; set; }
         public int Technical { get; set; }
         public int Recommend { get; set; }

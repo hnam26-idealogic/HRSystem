@@ -6,9 +6,15 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Interviews</h3>
-        <button class="btn btn-success" @onclick="NavigateToAdd">
-            <i class="bi bi-calendar-plus"></i> Add Interview
-        </button>
+        <div class="d-flex">
+            <input class="form-control me-2" style="width: 250px;" placeholder="Search candidate/interviewer" @bind="searchQuery" @bind:event="oninput" />
+            <button class="btn btn-primary me-2" @onclick="SearchInterviews">
+                <i class="bi bi-search"></i> Search
+            </button>
+            <button class="btn btn-success" @onclick="NavigateToAdd">
+                <i class="bi bi-calendar-plus"></i> Add Interview
+            </button>
+        </div>
     </div>
     @if (interviews == null)
     {
@@ -76,6 +82,7 @@
 @code {
     private List<InterviewDto> interviews;
     private string errorMessage;
+    private string searchQuery = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,6 +92,18 @@
     private async Task LoadInterviews()
     {
         interviews = await InterviewService.GetAllAsync();
+    }
+
+    private async Task SearchInterviews()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            await LoadInterviews();
+        }
+        else
+        {
+            interviews = await InterviewService.SearchAsync(searchQuery);
+        }
     }
 
     private void NavigateToAdd()
