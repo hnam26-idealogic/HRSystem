@@ -34,7 +34,7 @@ builder.Services.AddScoped<IInterviewRepository, SQLInterviewRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
 builder.Services.AddScoped<IRecordingStorageService, LocalRecordingStorageService>();
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfiles));
