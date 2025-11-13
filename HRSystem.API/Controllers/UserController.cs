@@ -3,6 +3,7 @@ using HRSystem.API.CustomActionFilters;
 using HRSystem.API.Models.Domain;
 using HRSystem.API.Models.DTO;
 using HRSystem.API.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

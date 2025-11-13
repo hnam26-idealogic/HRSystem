@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using HRSystem.API.CustomActionFilters;
 using HRSystem.API.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HRSystem.API.Controllers
 {
