@@ -85,3 +85,18 @@ HRSystem.API/Uploads/
 HRSystem.API/logs/
 HRSystem.UI/Uploads/
 HRSystem.UI/logs/
+
+# Azure publish/service profiles
+HRSystem.API/Properties/PublishProfiles/
+HRSystem.UI/Properties/PublishProfiles/
+HRSystem.API/Properties/ServiceDependencies/
+HRSystem.UI/Properties/ServiceDependencies/
+
+# Local storage folders
+HRSystem.API/Resumes/
+HRSystem.API/Recordings/
+
+# Solution/IDE files
+HRSystem.slnLaunch.user
+.idea/
+*.iml
