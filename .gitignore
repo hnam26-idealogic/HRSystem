@@ -1,3 +1,6 @@
+# Prevent uploading main config file
+HRSystem.API/appsettings.json
+HRSystem.UI/appsettings.json
 # .NET build artifacts
 bin/
 obj/
