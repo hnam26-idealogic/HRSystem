@@ -68,18 +68,6 @@ wwwroot/node_modules/
 # Logs
 *.log
 
-# OS generated files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Others
-*.DS_Store
-*.swp
-*.bak
-*.tmp
-
 # Ignore uploads and other runtime folders
 HRSystem.API/Uploads/
 HRSystem.API/logs/
@@ -100,3 +88,31 @@ HRSystem.API/Recordings/
 HRSystem.slnLaunch.user
 .idea/
 *.iml
+
+# Sensitive config files
+appsettings.json
+HRSystem.API/appsettings.Development.json
+HRSystem.API/appsettings.Local.json
+HRSystem.API/appsettings.*.local.json
+HRSystem.UI/appsettings.Development.json
+HRSystem.UI/appsettings.Local.json
+HRSystem.UI/appsettings.*.local.json
+
+# Azure secrets and credentials
+*.azureauth
+*.publishsettings
+*.keyvault
+*.pem
+*.crt
+*.cer
+*.pfx
+
+# Misc
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.DS_Store
+*.swp
+*.bak
+*.tmp
