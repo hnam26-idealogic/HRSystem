@@ -9,6 +9,8 @@ namespace HRSystem.API.Repositories
         public AzureUserRepository(Microsoft.Graph.GraphServiceClient graphServiceClient)
         {
             this._graphServiceClient = graphServiceClient;
+
+
         }
 
         public Task<User> AddAsync(User user, string password)
