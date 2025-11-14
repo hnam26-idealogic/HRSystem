@@ -18,6 +18,11 @@ namespace HRSystem.API.Services
             this.httpContextAccessor = httpContextAccessor;
         }
 
+        public string GetBlobSasUrl(string blobName, int expiryMinutes = 10)
+        {
+            throw new NotImplementedException();
+        }
+
         // Uploads the file and returns (resumePath, resumeBytes)
         public async Task<(string resumePath, byte[] resumeBytes)> UploadAsync(
             IFormFile file)

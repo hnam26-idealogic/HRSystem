@@ -1,5 +1,6 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System.IO;
@@ -42,10 +43,25 @@ namespace HRSystem.API.Services
                 resumeBytes = memoryStream.ToArray();
             }
 
-            // Blob URL (public or SAS if needed)
-            var urlFilePath = blobClient.Uri.ToString();
+            // Store only the blob name in DB, not the full URL
+            return (fileName, resumeBytes);
+        }
 
-            return (urlFilePath, resumeBytes);
+        public string GetBlobSasUrl(string blobName, int expiryMinutes = 10)
+        {
+            var blobClient = containerClient.GetBlobClient(blobName);
+
+            var sasBuilder = new BlobSasBuilder
+            {
+                BlobContainerName = containerClient.Name,
+                BlobName = blobName,
+                Resource = "b",
+                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(expiryMinutes)
+            };
+            sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+            var sasUri = blobClient.GenerateSasUri(sasBuilder);
+            return sasUri.ToString();
         }
     }
 }

@@ -83,5 +83,17 @@ namespace HRSystem.UI.Services
             var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
             return result?.Items ?? new List<CandidateDto>();
         }
+
+        public async Task<string> GetResumeUrlAsync(Guid candidateId)
+        {
+            await jwtService.ApplyJwtAsync(httpClient);
+            var response = await httpClient.GetAsync($"/api/Candidate/{candidateId}/resume-url");
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadAsStringAsync();
+        }
     }
 }

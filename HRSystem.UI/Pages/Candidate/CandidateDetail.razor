@@ -28,12 +28,12 @@
                             <dd class="col-sm-8">@candidate.Phone</dd>
                             <dt class="col-sm-4">Resume</dt>
                             <dd class="col-sm-8">
-                                @if (!string.IsNullOrEmpty(candidate.ResumePath))
+                                @if (!string.IsNullOrEmpty(resumeUrl))
                                 {
-                                    <a class="btn btn-outline-primary btn-sm me-1" href="@candidate.ResumePath" target="_blank">
+                                    <a class="btn btn-outline-primary btn-sm me-1" href="@resumeUrl" target="_blank">
                                         <i class="bi bi-eye"></i> View Resume
                                     </a>
-                                    <a class="btn btn-outline-success btn-sm" href="@candidate.ResumePath" download>
+                                    <a class="btn btn-outline-success btn-sm" href="@resumeUrl" download>
                                         <i class="bi bi-download"></i> Download Resume
                                     </a>
                                 }
@@ -54,10 +54,15 @@
 @code {
     [Parameter] public Guid Id { get; set; }
     private HRSystem.UI.DTOs.CandidateDto candidate;
+    private string resumeUrl;
 
     protected override async Task OnInitializedAsync()
     {
         candidate = await CandidateService.GetByIdAsync(Id);
+        if (!string.IsNullOrEmpty(candidate.ResumePath))
+        {
+            resumeUrl = await CandidateService.GetResumeUrlAsync(Id);
+        }
     }
 
     private void NavigateBack()

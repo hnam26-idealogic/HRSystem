@@ -49,6 +49,18 @@ namespace HRSystem.API.Controllers
             return Ok(mapper.Map<CandidateDto>(candidate));
         }
 
+        [HttpGet("{id:Guid}/resume-url")]
+        [Authorize(Roles = "HR, Interviewer")]
+        public async Task<IActionResult> GetResumeUrl([FromRoute] Guid id)
+        {
+            var candidate = await candidateRepository.GetByIdAsync(id);
+            if (candidate == null || string.IsNullOrEmpty(candidate.ResumePath))
+                return NotFound();
+
+            var sasUrl = fileStorageService.GetBlobSasUrl(candidate.ResumePath, 10); // 10 min expiry
+            return Ok(sasUrl);
+        }
+
         [HttpPost]
         [ValidateModel]
         [Authorize(Roles = "HR")]
@@ -66,8 +78,8 @@ namespace HRSystem.API.Controllers
 
             var candidateEntity = mapper.Map<Candidate>(addCandidateRequestDto);
 
-            var (resumePath, file) = await fileStorageService.UploadAsync(addCandidateRequestDto.Resume!);
-            candidateEntity.ResumePath = resumePath;
+            var (resumeBlobName, _) = await fileStorageService.UploadAsync(addCandidateRequestDto.Resume!);
+            candidateEntity.ResumePath = resumeBlobName;
 
             var createdCandidate = await candidateRepository.AddAsync(candidateEntity);
             var createdCandidateDto = mapper.Map<CandidateDto>(createdCandidate);

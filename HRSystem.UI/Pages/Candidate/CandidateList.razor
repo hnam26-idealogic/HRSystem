@@ -42,12 +42,12 @@
                         <td>@candidate.Email</td>
                         <td>@candidate.Phone</td>
                         <td>
-                            @if (!string.IsNullOrEmpty(candidate.ResumePath))
+                            @if (resumeUrls.TryGetValue(candidate.Id, out var resumeUrl) && !string.IsNullOrEmpty(resumeUrl))
                             {
-                                <a class="btn btn-outline-primary btn-sm me-1" href="@candidate.ResumePath" target="_blank">
+                                <a class="btn btn-outline-primary btn-sm me-1" href="@resumeUrl" target="_blank">
                                     <i class="bi bi-eye"></i> View
                                 </a>
-                                <a class="btn btn-outline-success btn-sm" href="@candidate.ResumePath" download>
+                                <a class="btn btn-outline-success btn-sm" href="@resumeUrl" download>
                                     <i class="bi bi-download"></i> Download
                                 </a>
                             }
@@ -78,10 +78,20 @@
     private List<HRSystem.UI.DTOs.CandidateDto> candidates;
     private string errorMessage;
     private string searchQuery = string.Empty;
+    private Dictionary<Guid, string> resumeUrls = new();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadCandidates();
+        resumeUrls = new Dictionary<Guid, string>();
+        foreach (var candidate in candidates)
+        {
+            if (!string.IsNullOrEmpty(candidate.ResumePath))
+            {
+                var url = await CandidateService.GetResumeUrlAsync(candidate.Id);
+                resumeUrls[candidate.Id] = url;
+            }
+        }
     }
 
     private async Task LoadCandidates()

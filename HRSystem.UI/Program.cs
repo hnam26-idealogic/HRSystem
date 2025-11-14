@@ -9,7 +9,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Set HttpClient to use the API server address
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7106/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://hrsystem-api-1-ajcghmadc8cwd5hb.southeastasia-01.azurewebsites.net") });
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CandidateService>();
