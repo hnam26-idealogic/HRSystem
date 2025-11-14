@@ -1,15 +1,12 @@
 ﻿using HRSystem.API.Data;
 using HRSystem.API.Mappings;
-using HRSystem.API.Models.Domain;
 using HRSystem.API.Repositories;
 using HRSystem.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,7 +29,7 @@ var localSqlConnection = builder.Configuration.GetConnectionString("DefaultConne
 builder.Services.AddDbContext<HRSystemDBContext>(options =>
     options.UseSqlServer(!string.IsNullOrEmpty(azureSqlConnection) ? azureSqlConnection : localSqlConnection));
 
-//builder.Services.AddScoped<IUserRepository, SQLUserRepository>();
+builder.Services.AddScoped<IUserRepository, AzureUserRepository>();
 builder.Services.AddScoped<ICandidateRepository, SQLCandidateRepository>();
 builder.Services.AddScoped<IInterviewRepository, SQLInterviewRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
@@ -78,57 +75,63 @@ builder.Services.AddSwaggerGen();
 //     };
 // });
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(jwtOptions =>
-    {
-        builder.Configuration.Bind("AzureAd", jwtOptions);
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddMicrosoftIdentityWebApi(jwtOptions =>
+//    {
+//        builder.Configuration.Bind("AzureAd", jwtOptions);
 
-        // IMPORTANT: Configure audience validation
-        var clientId = builder.Configuration["AzureAd:ClientId"];
+//        // IMPORTANT: Configure audience validation
+//        var clientId = builder.Configuration["AzureAd:ClientId"];
 
-        jwtOptions.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
+//        jwtOptions.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateIssuer = true,
+//            ValidateAudience = true,
+//            ValidateLifetime = true,
+//            ValidateIssuerSigningKey = true,
 
-            // Accept both formats of audience
-            ValidAudiences = new[]
-            {
-                clientId!,                           // Just the client ID
-                $"api://{clientId}",                 // With api:// prefix
-            },
+//            // Accept both formats of audience
+//            ValidAudiences = new[]
+//            {
+//                clientId!,                           // Just the client ID
+//                $"api://{clientId}",                 // With api:// prefix
+//            },
 
-            // Log validation details
-            LogValidationExceptions = true
-        };
+//            // Log validation details
+//            LogValidationExceptions = true
+//        };
 
-        jwtOptions.Events = new JwtBearerEvents
-        {
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine($"❌ Authentication failed: {context.Exception.Message}");
-                if (context.Exception is SecurityTokenInvalidAudienceException)
-                {
-                    Console.WriteLine($"   Expected audience: {string.Join(", ", jwtOptions.TokenValidationParameters.ValidAudiences)}");
-                    Console.WriteLine($"   Token audience: {context.Exception.Data["InvalidAudience"]}");
-                }
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine("✅ Token validated successfully");
-                var claims = context.Principal?.Claims.Select(c => $"{c.Type}: {c.Value}");
-                Console.WriteLine($"   Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
-                return Task.CompletedTask;
-            }
-        };
-    },
-    msIdentityOptions =>
-    {
-        builder.Configuration.Bind("AzureAd", msIdentityOptions);
-    });
+//        jwtOptions.Events = new JwtBearerEvents
+//        {
+//            OnAuthenticationFailed = context =>
+//            {
+//                Console.WriteLine($"❌ Authentication failed: {context.Exception.Message}");
+//                if (context.Exception is SecurityTokenInvalidAudienceException)
+//                {
+//                    Console.WriteLine($"   Expected audience: {string.Join(", ", jwtOptions.TokenValidationParameters.ValidAudiences)}");
+//                    Console.WriteLine($"   Token audience: {context.Exception.Data["InvalidAudience"]}");
+//                }
+//                return Task.CompletedTask;
+//            },
+//            OnTokenValidated = context =>
+//            {
+//                Console.WriteLine("✅ Token validated successfully");
+//                var claims = context.Principal?.Claims.Select(c => $"{c.Type}: {c.Value}");
+//                Console.WriteLine($"   Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
+//                return Task.CompletedTask;
+//            }
+//        };
+//    },
+//    msIdentityOptions =>
+//    {
+//        builder.Configuration.Bind("AzureAd", msIdentityOptions);
+//    });
+
+
+builder.Services
+    .AddMicrosoftIdentityWebApiAuthentication(builder.Configuration)
+    .EnableTokenAcquisitionToCallDownstreamApi()
+    .AddMicrosoftGraphAppOnly(authProvider => new Microsoft.Graph.GraphServiceClient(authProvider));
 
 
 // Add Authorization

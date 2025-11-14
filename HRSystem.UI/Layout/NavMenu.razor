@@ -1,29 +1,5 @@
-﻿@inject HRSystem.UI.Services.AuthService AuthService
-@inject HRSystem.UI.Services.UserService UserService
-
-@code {
-    private bool collapseNavMenu = true;
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-    private HRSystem.UI.DTOs.UserDto currentUser;
-    private bool isAuthenticated;
-    private string userType;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var userId = await AuthService.GetCurrentUserIdAsync();
-        isAuthenticated = userId.HasValue && userId.Value != Guid.Empty;
-        if (isAuthenticated)
-        {
-            currentUser = await UserService.GetByIdAsync(userId.Value);
-            userType = currentUser?.UserType;
-        }
-    }
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -36,49 +12,107 @@
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="nav flex-column">
+        <!-- Home - Always visible -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-        @if (!isAuthenticated)
-        {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="authentication/login">
-                    <span class="bi bi-box-arrow-in-right-nav-menu" aria-hidden="true"></span> Login
-                </NavLink>
-            </div>
-        }
-        <AuthorizeView Roles="HR, Interviewer">
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="candidates">
-                    <span class="bi bi-people-fill" aria-hidden="true"></span> Candidates
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="interviewers">
-                    <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Interviewers
-                </NavLink>
-            </div>
-        </AuthorizeView>
-        <AuthorizeView Roles="HR,Interviewer">
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="interviews">
-                    <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Interviews
-                </NavLink>
-            </div>
-        </AuthorizeView>
+
         <AuthorizeView>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="profile">
-                    <span class="bi bi-person-circle" aria-hidden="true"></span> Profile
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="logout">
-                    <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
-                </NavLink>
-            </div>
+            <NotAuthorized>
+                <!-- Login - Only shown when NOT authenticated -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="authentication/login">
+                        <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+            <Authorized Context="mainContext">
+                <!-- Candidates - Visible to both HR and Interviewer -->
+                <AuthorizeView Roles="HR,Interviewer">
+                    <Authorized Context="candidateContext">
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="candidates">
+                                <span class="bi bi-people-fill" aria-hidden="true"></span> Candidates
+                            </NavLink>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+
+                <!-- Interviews - Visible to both HR and Interviewer -->
+                <AuthorizeView Roles="HR,Interviewer">
+                    <Authorized Context="interviewContext">
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="interviews">
+                                <span class="bi bi-calendar-check-fill" aria-hidden="true"></span> Interviews
+                            </NavLink>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+
+                <!-- Interviewers - HR Only -->
+                <AuthorizeView Roles="HR">
+                    <Authorized Context="interviewerContext">
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="interviewers">
+                                <span class="bi bi-person-badge-fill" aria-hidden="true"></span> Interviewers
+                            </NavLink>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+
+                <!-- Divider -->
+                <hr class="text-white-50 my-2" />
+
+                <!-- User Info -->
+                <div class="nav-item px-3">
+                    <div class="text-white-50 small px-2">
+                        <div>Signed in as:</div>
+                        <div class="fw-bold text-white">@mainContext.User.Identity?.Name</div>
+                        <div class="mt-1">
+                            @foreach (var role in userRoles)
+                            {
+                                <span class="badge bg-primary me-1">@role</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logout - Only shown when authenticated -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="authentication/logout">
+                        <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
+                    </NavLink>
+                </div>
+            </Authorized>
         </AuthorizeView>
     </nav>
 </div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private List<string> userRoles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            // Extract user roles
+            userRoles = user.Claims
+                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role || c.Type == "roles")
+                .Select(c => c.Value)
+                .Distinct()
+                .ToList();
+        }
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

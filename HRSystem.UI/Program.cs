@@ -49,6 +49,7 @@ builder.Services.AddMsalAuthentication(options =>
 {
     builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
 
+    // Add API scope
     var scopes = builder.Configuration.GetSection("Api:Scopes").Get<string[]>();
     if (scopes != null)
     {
