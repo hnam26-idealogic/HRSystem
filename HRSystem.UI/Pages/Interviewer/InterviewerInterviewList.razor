@@ -4,6 +4,10 @@
 @inject HRSystem.UI.Services.UserService UserService
 @inject NavigationManager Navigation
 
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize(Roles = "HR")]
+
 <h3>Interviews Assigned to Interviewer</h3>
 <div class="mb-3">
     <input type="text" class="form-control" placeholder="Search interviewer by email or name..." @bind="searchInterviewer" />

@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 
 namespace HRSystem.UI.Services
 {
-    public class JwtService
+    public class JwtTokenService : ITokenService
     {
         private readonly IJSRuntime js;
 
-        public JwtService(IJSRuntime js)
+        public JwtTokenService(IJSRuntime js)
         {
             this.js = js;
         }
@@ -28,7 +28,7 @@ namespace HRSystem.UI.Services
             await js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
         }
 
-        public async Task ApplyJwtAsync(HttpClient httpClient)
+        public async Task ApplyTokenAsync(HttpClient httpClient)
         {
             var token = await GetTokenAsync();
             httpClient.DefaultRequestHeaders.Authorization = token != null

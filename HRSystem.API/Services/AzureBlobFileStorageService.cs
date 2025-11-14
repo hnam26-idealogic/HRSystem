@@ -50,7 +50,6 @@ namespace HRSystem.API.Services
         public string GetBlobSasUrl(string blobName, int expiryMinutes = 10)
         {
             var blobClient = containerClient.GetBlobClient(blobName);
-
             var sasBuilder = new BlobSasBuilder
             {
                 BlobContainerName = containerClient.Name,

@@ -10,9 +10,9 @@ namespace HRSystem.UI.Services
     public class AuthService
     {
         private readonly HttpClient httpClient;
-        private readonly JwtService jwtService;
+        private readonly ITokenService jwtService;
 
-        public AuthService(HttpClient httpClient, JwtService jwtService)
+        public AuthService(HttpClient httpClient, ITokenService jwtService)
         {
             this.httpClient = httpClient;
             this.jwtService = jwtService;

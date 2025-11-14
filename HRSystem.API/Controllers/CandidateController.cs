@@ -7,13 +7,17 @@ using HRSystem.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 
 namespace HRSystem.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CandidateController : ControllerBase
     {
+        static readonly string[] scopeRequiredByApi = new string[] { "access_as_user" };
+
         private readonly ICandidateRepository candidateRepository;
         private readonly IFileStorageService fileStorageService;
         private readonly IMapper mapper;
@@ -26,9 +30,11 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "HR")]
+        [Authorize(Roles = "HR,Interviewer")]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
+            HttpContext.VerifyUserHasAnyAcceptedScope(scopeRequiredByApi);
+
             var (pagedCandidates, totalCount) = await candidateRepository.GetAllAsync(p, size);
             var candidateDtos = mapper.Map<List<CandidateDto>>(pagedCandidates);
             return Ok(new

@@ -4,7 +4,6 @@ using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using HRSystem.UI.DTOs;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -13,9 +12,9 @@ namespace HRSystem.UI.Services
     public class UserService
     {
         private readonly HttpClient httpClient;
-        private readonly JwtService jwtService;
+        private readonly ITokenService jwtService;
 
-        public UserService(HttpClient httpClient, JwtService jwtService)
+        public UserService(HttpClient httpClient, ITokenService jwtService)
         {
             this.httpClient = httpClient;
             this.jwtService = jwtService;

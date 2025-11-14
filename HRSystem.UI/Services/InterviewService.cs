@@ -12,9 +12,9 @@ namespace HRSystem.UI.Services
     public class InterviewService
     {
         private readonly HttpClient httpClient;
-        private readonly JwtService jwtService;
+        private readonly ITokenService jwtService;
 
-        public InterviewService(HttpClient httpClient, JwtService jwtService)
+        public InterviewService(HttpClient httpClient, ITokenService jwtService)
         {
             this.httpClient = httpClient;
             this.jwtService = jwtService;
@@ -22,7 +22,7 @@ namespace HRSystem.UI.Services
 
         public async Task<List<InterviewDto>> GetAllAsync(int page = 1, int size = 10)
         {
-            await jwtService.ApplyJwtAsync(httpClient);
+            await jwtService.ApplyTokenAsync(httpClient);
             var response = await httpClient.GetAsync($"/api/Interview?p={page}&size={size}");
             var rawJson = await response.Content.ReadAsStringAsync();
             Console.WriteLine("Raw API response:");
@@ -43,13 +43,13 @@ namespace HRSystem.UI.Services
 
         public async Task<InterviewDto> GetByIdAsync(Guid id)
         {
-            await jwtService.ApplyJwtAsync(httpClient);
+            await jwtService.ApplyTokenAsync(httpClient);
             return await httpClient.GetFromJsonAsync<InterviewDto>($"/api/Interview/{id}");
         }
 
         public async Task<bool> AddAsync(AddInterviewRequestDto dto, IBrowserFile recordingFile)
         {
-            await jwtService.ApplyJwtAsync(httpClient);
+            await jwtService.ApplyTokenAsync(httpClient);
             using var form = new MultipartFormDataContent();
             form.Add(new StringContent(dto.Job ?? string.Empty), nameof(dto.Job));
             form.Add(new StringContent(dto.CandidateId.ToString()), nameof(dto.CandidateId));
@@ -75,7 +75,7 @@ namespace HRSystem.UI.Services
 
         public async Task<bool> UpdateAsync(Guid id, UpdateInterviewRequestDto dto, IBrowserFile recordingFile)
         {
-            await jwtService.ApplyJwtAsync(httpClient);
+            await jwtService.ApplyTokenAsync(httpClient);
             var content = new MultipartFormDataContent();
             content.Add(new StringContent(dto.Job ?? string.Empty), "Job");
             content.Add(new StringContent(dto.CandidateId.ToString()), "CandidateId");
@@ -100,14 +100,14 @@ namespace HRSystem.UI.Services
                           
         public async Task<bool> DeleteAsync(Guid id)
         {
-            await jwtService.ApplyJwtAsync(httpClient);
+            await jwtService.ApplyTokenAsync(httpClient);
             var response = await httpClient.DeleteAsync($"/api/Interview/{id}");
             return response.IsSuccessStatusCode;
         }
 
         public async Task<List<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10)
         {
-            await jwtService.ApplyJwtAsync(httpClient);
+            await jwtService.ApplyTokenAsync(httpClient);
             var response = await httpClient.GetAsync($"/api/Interview/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
             if (!response.IsSuccessStatusCode) return new List<InterviewDto>();
             var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();

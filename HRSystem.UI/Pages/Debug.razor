@@ -1,0 +1,265 @@
+﻿@page "/debug"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAccessTokenProvider TokenProvider
+
+<PageTitle>Debug - Claims</PageTitle>
+
+<div class="container mt-4">
+    <h3>Authentication Debug Information</h3>
+
+    <AuthorizeView>
+        <Authorized Context="authContext">
+            <div class="alert alert-success">
+                <h5>✅ User is authenticated</h5>
+                <p><strong>Name:</strong> @authContext.User.Identity?.Name</p>
+                <p><strong>Authentication Type:</strong> @authContext.User.Identity?.AuthenticationType</p>
+            </div>
+
+            <!-- MOST IMPORTANT: User Claims from ClaimsPrincipal -->
+            <div class="card mt-3 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5>⭐ User ClaimsPrincipal Claims (@userClaims.Count)</h5>
+                    <small><strong>This is what AuthorizeView uses!</strong></small>
+                </div>
+                <div class="card-body">
+                    @if (userClaims.Any())
+                    {
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Claim Type</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var claim in userClaims)
+                                {
+                                    var isRole = claim.Type.Contains("role", StringComparison.OrdinalIgnoreCase);
+                                    <tr class="@(isRole ? "table-warning fw-bold" : "")">
+                                        <td>
+                                            <code>@claim.Type</code>
+                                            @if (isRole)
+                                            {
+                                                <span class="badge bg-danger ms-2">ROLE</span>
+                                            }
+                                        </td>
+                                        <td>@claim.Value</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+
+            <!-- Access Token Claims -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5>Access Token Claims (@accessTokenClaims.Count)</h5>
+                    <small>Raw claims from access token</small>
+                </div>
+                <div class="card-body">
+                    @if (accessTokenClaims.Any())
+                    {
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Claim Type</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var claim in accessTokenClaims)
+                                {
+                                    <tr class="@(claim.Key.Contains("role", StringComparison.OrdinalIgnoreCase) ? "table-warning" : "")">
+                                        <td><code>@claim.Key</code></td>
+                                        <td>@claim.Value</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else if (!string.IsNullOrEmpty(accessTokenError))
+                    {
+                        <div class="alert alert-danger">@accessTokenError</div>
+                    }
+                </div>
+            </div>
+
+            <!-- Role Summary -->
+            <div class="card mt-3">
+                <div class="card-header bg-warning">
+                    <h5>🎯 Role Authorization Test</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Roles found in User ClaimsPrincipal:</h6>
+                    @if (userRoles.Any())
+                    {
+                        <div class="alert alert-success">
+                            <ul class="mb-0">
+                                @foreach (var role in userRoles)
+                                {
+                                    <li><span class="badge bg-primary fs-5">@role</span></li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <strong>❌ No roles in User ClaimsPrincipal!</strong>
+                            <p>This means AuthorizeView will not work properly.</p>
+                        </div>
+                    }
+
+                    <hr />
+
+                    <h6 class="mt-3">Authorization Tests:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Test: HR Role</h6>
+                                    <AuthorizeView Roles="HR">
+                                        <Authorized>
+                                            <div class="alert alert-success mb-0">✅ You have HR role</div>
+                                        </Authorized>
+                                        <NotAuthorized>
+                                            <div class="alert alert-danger mb-0">❌ You don't have HR role</div>
+                                        </NotAuthorized>
+                                    </AuthorizeView>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Test: Interviewer Role</h6>
+                                    <AuthorizeView Roles="Interviewer">
+                                        <Authorized>
+                                            <div class="alert alert-success mb-0">✅ You have Interviewer role</div>
+                                        </Authorized>
+                                        <NotAuthorized>
+                                            <div class="alert alert-danger mb-0">❌ You don't have Interviewer role</div>
+                                        </NotAuthorized>
+                                    </AuthorizeView>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Test: HR OR Interviewer Role</h6>
+                                    <AuthorizeView Roles="HR,Interviewer">
+                                        <Authorized>
+                                            <div class="alert alert-success mb-0">✅ You have HR or Interviewer role</div>
+                                        </Authorized>
+                                        <NotAuthorized>
+                                            <div class="alert alert-danger mb-0">❌ You don't have HR or Interviewer role</div>
+                                        </NotAuthorized>
+                                    </AuthorizeView>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="alert alert-warning">
+                <h5>❌ User is not authenticated</h5>
+                <a href="authentication/login" class="btn btn-primary">Login</a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private List<System.Security.Claims.Claim> userClaims = new();
+    private Dictionary<string, string> accessTokenClaims = new();
+    private List<string> userRoles = new();
+    private string? accessTokenError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            // Get all claims from the User ClaimsPrincipal
+            userClaims = user.Claims.OrderBy(c => c.Type).ToList();
+            
+            // Extract roles from User ClaimsPrincipal
+            userRoles = user.Claims
+                .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role || c.Type == "roles")
+                .Select(c => c.Value)
+                .Distinct()
+                .ToList();
+
+            // Get access token for comparison
+            try
+            {
+                var tokenResult = await TokenProvider.RequestAccessToken();
+                
+                if (tokenResult.TryGetToken(out var token))
+                {
+                    accessTokenClaims = ParseJwtClaims(token.Value);
+                }
+                else
+                {
+                    accessTokenError = "Could not retrieve access token";
+                }
+            }
+            catch (Exception ex)
+            {
+                accessTokenError = ex.Message;
+            }
+        }
+    }
+
+    private Dictionary<string, string> ParseJwtClaims(string jwt)
+    {
+        var claims = new Dictionary<string, string>();
+        try
+        {
+            var parts = jwt.Split('.');
+            if (parts.Length < 2) return claims;
+
+            var payload = parts[1];
+            switch (payload.Length % 4)
+            {
+                case 2: payload += "=="; break;
+                case 3: payload += "="; break;
+            }
+
+            var jsonBytes = Convert.FromBase64String(payload);
+            var json = System.Text.Encoding.UTF8.GetString(jsonBytes);
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+
+            foreach (var property in doc.RootElement.EnumerateObject())
+            {
+                if (property.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    var values = property.Value.EnumerateArray().Select(v => v.ToString()).ToArray();
+                    claims[property.Name] = string.Join(", ", values);
+                }
+                else
+                {
+                    claims[property.Name] = property.Value.ToString();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            accessTokenError = $"Error parsing JWT: {ex.Message}";
+        }
+
+        return claims;
+    }
+}

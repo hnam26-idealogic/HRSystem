@@ -2,6 +2,10 @@
 @inject HRSystem.UI.Services.CandidateService CandidateService
 @inject NavigationManager Navigation
 
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize(Roles = "HR, Interviewer")]
+
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Candidates</h3>

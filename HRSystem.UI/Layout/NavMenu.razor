@@ -44,26 +44,15 @@
         @if (!isAuthenticated)
         {
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="login">
+                <NavLink class="nav-link" href="authentication/login">
                     <span class="bi bi-box-arrow-in-right-nav-menu" aria-hidden="true"></span> Login
                 </NavLink>
             </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="register">
-                    <span class="bi bi-person-plus-nav-menu" aria-hidden="true"></span> Register
-                </NavLink>
-            </div>
         }
-        else if (userType == "HR")
-        {
+        <AuthorizeView Roles="HR, Interviewer">
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="candidates">
-                    <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Candidates
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="interviews">
-                    <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Interviews
+                    <span class="bi bi-people-fill" aria-hidden="true"></span> Candidates
                 </NavLink>
             </div>
             <div class="nav-item px-3">
@@ -71,24 +60,15 @@
                     <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Interviewers
                 </NavLink>
             </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="profile">
-                    <span class="bi bi-person-circle" aria-hidden="true"></span> Profile
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="logout">
-                    <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
-                </NavLink>
-            </div>
-        }
-        else if (userType == "Interviewer")
-        {
+        </AuthorizeView>
+        <AuthorizeView Roles="HR,Interviewer">
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="interviews">
                     <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Interviews
                 </NavLink>
             </div>
+        </AuthorizeView>
+        <AuthorizeView>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="profile">
                     <span class="bi bi-person-circle" aria-hidden="true"></span> Profile
@@ -99,6 +79,6 @@
                     <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
                 </NavLink>
             </div>
-        }
+        </AuthorizeView>
     </nav>
 </div>
