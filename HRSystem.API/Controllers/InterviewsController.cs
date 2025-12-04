@@ -125,12 +125,32 @@ namespace HRSystem.API.Controllers
         {
             var (interviews, totalCount) = await interviewRepository.SearchAsync(query, p, size);
             var interviewDtos = mapper.Map<List<InterviewDto>>(interviews);
+            
+            // Map names from Graph API users
             foreach (var dto in interviewDtos)
             {
                 dto.CandidateName = candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
                 dto.InterviewerName = users.FirstOrDefault(u => u.Email == dto.InterviewerEmail)?.Fullname ?? "";
                 dto.HrName = users.FirstOrDefault(u => u.Email == dto.HrEmail)?.Fullname ?? "";
             }
+            
+            // Additionally filter by user names if they match the query (client-side filtering)
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var normalizedQuery = query.Trim().ToLower();
+                interviewDtos = interviewDtos.Where(dto =>
+                    dto.CandidateName.ToLower().Contains(normalizedQuery) ||
+                    dto.InterviewerName.ToLower().Contains(normalizedQuery) ||
+                    dto.HrName.ToLower().Contains(normalizedQuery) ||
+                    dto.Job.ToLower().Contains(normalizedQuery) ||
+                    dto.Status.ToLower().Contains(normalizedQuery) ||
+                    dto.InterviewerEmail.ToLower().Contains(normalizedQuery) ||
+                    dto.HrEmail.ToLower().Contains(normalizedQuery)
+                ).ToList();
+                
+                totalCount = interviewDtos.Count;
+            }
+            
             return Ok(new
             {
                 TotalCount = totalCount,

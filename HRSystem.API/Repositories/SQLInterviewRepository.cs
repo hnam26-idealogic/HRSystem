@@ -70,22 +70,34 @@ namespace HRSystem.API.Repositories
 
        public async Task<(IEnumerable<Interview> Items, int TotalCount)> SearchAsync(string query, int page = 1, int size = 10)
        {
-            throw new NotImplementedException();
-           // var normalizedQuery = query?.Trim().ToLower();
-           //var interviewsQuery = dbContext.Interviews
-           //    .Where(i =>
-           //        dbContext.Candidates.Any(c => c.Id == i.CandidateId && c.Fullname.ToLower().Contains(normalizedQuery)) ||
-           //        dbContext.Users.Any(u => u.Id == i.InterviewerId && u.Fullname.ToLower().Contains(normalizedQuery)) ||
-           //        dbContext.Candidates.Any(c => c.Id == i.CandidateId && c.Email.ToLower().Contains(normalizedQuery)) ||
-           //        dbContext.Users.Any(u => u.Id == i.InterviewerId && u.Email.ToLower().Contains(normalizedQuery))
-           //    );
-           //var totalCount = await interviewsQuery.CountAsync();
-           //var items = await interviewsQuery
-           //    .OrderBy(i => i.InterviewedAt)
-           //    .Skip((page - 1) * size)
-           //    .Take(size)
-           //    .ToListAsync();
-           //return (items, totalCount);
+           var normalizedQuery = query?.Trim().ToLower() ?? string.Empty;
+           
+           if (string.IsNullOrWhiteSpace(normalizedQuery))
+           {
+               return await GetAllAsync(page, size);
+           }
+
+           // Search only by candidate name/email, job, status, and interviewer/HR emails
+           // User names will be matched in the controller after fetching from Graph API
+           var interviewsQuery = dbContext.Interviews
+               .Where(i =>
+                   dbContext.Candidates.Any(c => c.Id == i.CandidateId && 
+                       (c.Fullname.ToLower().Contains(normalizedQuery) || 
+                        c.Email.ToLower().Contains(normalizedQuery))) ||
+                   i.Job.ToLower().Contains(normalizedQuery) ||
+                   i.Status.ToLower().Contains(normalizedQuery) ||
+                   i.InterviewerEmail.ToLower().Contains(normalizedQuery) ||
+                   i.HrEmail.ToLower().Contains(normalizedQuery)
+               );
+
+           var totalCount = await interviewsQuery.CountAsync();
+           var items = await interviewsQuery
+               .OrderByDescending(i => i.InterviewedAt)
+               .Skip((page - 1) * size)
+               .Take(size)
+               .ToListAsync();
+
+           return (items, totalCount);
        }
    }
 }

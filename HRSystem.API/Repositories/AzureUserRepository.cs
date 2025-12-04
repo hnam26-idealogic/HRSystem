@@ -16,7 +16,7 @@ namespace HRSystem.API.Repositories
         {
             this._graphServiceClient = graphServiceClient;
             this._configuration = configuration;
-
+            this.convertAppRolesHelper = convertAppRolesHelper;
         }
 
         public Task<Models.Domain.User> AddAsync(Models.Domain.User user, string password)
