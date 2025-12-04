@@ -14,7 +14,7 @@ namespace HRSystem.API.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class CandidateController : ControllerBase
+    public class CandidatesController : ControllerBase
     {
         static readonly string[] scopeRequiredByApi = new string[] { "access_as_user" };
 
@@ -22,7 +22,7 @@ namespace HRSystem.API.Controllers
         private readonly IFileStorageService fileStorageService;
         private readonly IMapper mapper;
 
-        public CandidateController(ICandidateRepository candidateRepository, IFileStorageService fileStorageService, IMapper mapper)
+        public CandidatesController(ICandidateRepository candidateRepository, IFileStorageService fileStorageService, IMapper mapper)
         {
             this.candidateRepository = candidateRepository;
             this.fileStorageService = fileStorageService;

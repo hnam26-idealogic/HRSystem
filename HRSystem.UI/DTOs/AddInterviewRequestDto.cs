@@ -14,10 +14,10 @@ namespace HRSystem.UI.DTOs
         public Guid CandidateId { get; set; }
 
         [Required(ErrorMessage = "Interviewer is required.")]
-        public Guid InterviewerId { get; set; }
+        public string InterviewerEmail { get; set; }
 
         [Required(ErrorMessage = "HR is required.")]
-        public Guid HrId { get; set; }
+        public string HrEmail { get; set; }
 
         [Required(ErrorMessage = "Interview date is required.")]
         public DateTime InterviewedAt { get; set; }

@@ -1,6 +1,6 @@
 @page "/interviews"
 @using HRSystem.UI.DTOs
-@inject HRSystem.UI.Services.InterviewService InterviewService
+@inject IInterviewService InterviewService
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
@@ -30,6 +30,7 @@
                 <tr>
                     <th>Candidate</th>
                     <th>Interviewer</th>
+                    <th>HR</th>
                     <th>Date</th>
                     <th>Status</th>
                     <th>Recording</th>
@@ -42,6 +43,7 @@
                     <tr>
                         <td>@interview.CandidateName</td>
                         <td>@interview.InterviewerName</td>
+                        <td>@interview.HrName</td>
                         <td>@interview.InterviewedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>@interview.Status</td>
                         <td>

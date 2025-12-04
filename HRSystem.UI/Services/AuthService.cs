@@ -1,58 +1,153 @@
-﻿using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-using HRSystem.UI.DTOs;
-using System.IdentityModel.Tokens.Jwt;
+﻿using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
+using HRSystem.UI.DTOs;
 
-namespace HRSystem.UI.Services
+namespace HRSystem.UI.Services;
+
+public class AuthService : IAuthService
 {
-    public class AuthService
+    private readonly AuthenticationStateProvider _authenticationStateProvider;
+
+    public AuthService(AuthenticationStateProvider authenticationStateProvider)
     {
-        private readonly HttpClient httpClient;
-        private readonly ITokenService jwtService;
+        _authenticationStateProvider = authenticationStateProvider;
+    }
 
-        public AuthService(HttpClient httpClient, ITokenService jwtService)
+    private async Task<ClaimsPrincipal?> GetCurrentUserAsync()
+    {
+        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User?.Identity?.IsAuthenticated == true ? authState.User : null;
+    }
+
+    public async Task<Guid?> GetCurrentUserIdAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return null;
+
+        // Try different claim types for user ID
+        var userIdClaim = user.FindFirst("oid")                      // Azure AD Object ID (most reliable)
+                       ?? user.FindFirst(ClaimTypes.NameIdentifier)  // Standard claim
+                       ?? user.FindFirst("sub")                      // OIDC standard
+                       ?? user.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier");
+
+        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
         {
-            this.httpClient = httpClient;
-            this.jwtService = jwtService;
+            return userId;
         }
 
-        public async Task<bool> LoginAsync(LoginRequestDto loginDto)
+        return null;
+    }
+
+    public async Task<string?> GetCurrentUserEmailAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return null;
+
+        return user.FindFirst("preferred_username")?.Value  // Most common in Entra ID
+            ?? user.FindFirst(ClaimTypes.Email)?.Value
+            ?? user.FindFirst("email")?.Value
+            ?? user.FindFirst("upn")?.Value;                // User Principal Name
+    }
+
+    public async Task<string?> GetCurrentUserNameAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return null;
+
+        return user.FindFirst("name")?.Value
+            ?? user.FindFirst(ClaimTypes.Name)?.Value
+            ?? user.FindFirst(ClaimTypes.GivenName)?.Value
+            ?? user.Identity?.Name;
+    }
+
+    public async Task<string?> GetCurrentUserGivenNameAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return null;
+
+        return user.FindFirst(ClaimTypes.GivenName)?.Value
+            ?? user.FindFirst("given_name")?.Value;
+    }
+
+    public async Task<string?> GetCurrentUserFamilyNameAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return null;
+
+        return user.FindFirst(ClaimTypes.Surname)?.Value
+            ?? user.FindFirst("family_name")?.Value;
+    }
+
+    public async Task<List<string>> GetCurrentUserRolesAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return new List<string>();
+
+        return user.FindAll(ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+    }
+
+    public async Task<bool> IsInRoleAsync(string role)
+    {
+        var user = await GetCurrentUserAsync();
+        return user?.IsInRole(role) ?? false;
+    }
+
+    public async Task<bool> IsInAnyRoleAsync(params string[] roles)
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return false;
+
+        foreach (var role in roles)
         {
-            var response = await httpClient.PostAsJsonAsync("/api/Auth/login", loginDto);
-            if (response.IsSuccessStatusCode)
+            if (user.IsInRole(role))
+                return true;
+        }
+        return false;
+    }
+
+    public async Task<bool> IsAuthenticatedAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        return user != null;
+    }
+
+
+    public async Task<UserDto?> GetCurrentUserProfileAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return null;
+
+        return new UserDto
+        {
+            Id = await GetCurrentUserIdAsync() ?? Guid.Empty,
+            Email = await GetCurrentUserEmailAsync(),
+            Fullname = await GetCurrentUserNameAsync(),
+            GivenName = await GetCurrentUserGivenNameAsync(),
+            FamilyName = await GetCurrentUserFamilyNameAsync(),
+            Roles = await GetCurrentUserRolesAsync()
+        };
+    }
+
+    public async Task<Dictionary<string, List<string>>> GetAllClaimsAsync()
+    {
+        var user = await GetCurrentUserAsync();
+        var claimsDict = new Dictionary<string, List<string>>();
+
+        if (user != null)
+        {
+            foreach (var claim in user.Claims)
             {
-                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
-                if (loginResponse?.JwtToken != null)
+                if (!claimsDict.ContainsKey(claim.Type))
                 {
-                    await jwtService.SetTokenAsync(loginResponse.JwtToken);
-                    return true;
+                    claimsDict[claim.Type] = new List<string>();
                 }
+                claimsDict[claim.Type].Add(claim.Value);
             }
-            return false;
         }
 
-        public async Task<bool> RegisterAsync(RegisterRequestDto registerDto)
-        {
-            var response = await httpClient.PostAsJsonAsync("/api/Auth/register", registerDto);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<Guid?> GetCurrentUserIdAsync()
-        {
-            var token = await jwtService.GetTokenAsync();
-            if (string.IsNullOrEmpty(token))
-                return null;
-
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-
-            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "sub" || c.Type == "id");
-            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
-                return userId;
-
-            return null;
-        }
+        return claimsDict;
     }
 }
+

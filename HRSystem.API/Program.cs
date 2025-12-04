@@ -1,12 +1,15 @@
 ﻿using HRSystem.API.Data;
+using HRSystem.API.Helper;
 using HRSystem.API.Mappings;
 using HRSystem.API.Repositories;
 using HRSystem.API.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
+using HRSystem.API.Services;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,101 +40,21 @@ builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 //builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
 builder.Services.AddScoped<IRecordingStorageService, LocalRecordingStorageService>();
+builder.Services.AddScoped<ConvertAppRolesHelper>();
+
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfiles));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//builder.Services.AddIdentity<User, IdentityRole<Guid>>()
-//    .AddEntityFrameworkStores<HRSystemDBContext>()
-//    .AddDefaultTokenProviders();
-
-//builder.Services.Configure<IdentityOptions>(options =>
-//{
-//    options.Password.RequireDigit = true;
-//    options.Password.RequireLowercase = true;
-//    options.Password.RequireNonAlphanumeric = false;
-//    options.Password.RequireUppercase = true;
-//    options.Password.RequiredLength = 6;
-//    options.Password.RequiredUniqueChars = 1;
-//});
-
-// builder.Services.AddAuthentication(options =>
-// {
-//     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-// })
-// .AddJwtBearer(options =>
-// {
-//     options.TokenValidationParameters = new TokenValidationParameters
-//     {
-//         ValidateIssuer = true,
-//         ValidateAudience = true,
-//         ValidateLifetime = true,
-//         ValidateIssuerSigningKey = true,
-//         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//         ValidAudience = builder.Configuration["Jwt:Audience"],
-//         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-//     };
-// });
-
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddMicrosoftIdentityWebApi(jwtOptions =>
-//    {
-//        builder.Configuration.Bind("AzureAd", jwtOptions);
-
-//        // IMPORTANT: Configure audience validation
-//        var clientId = builder.Configuration["AzureAd:ClientId"];
-
-//        jwtOptions.TokenValidationParameters = new TokenValidationParameters
-//        {
-//            ValidateIssuer = true,
-//            ValidateAudience = true,
-//            ValidateLifetime = true,
-//            ValidateIssuerSigningKey = true,
-
-//            // Accept both formats of audience
-//            ValidAudiences = new[]
-//            {
-//                clientId!,                           // Just the client ID
-//                $"api://{clientId}",                 // With api:// prefix
-//            },
-
-//            // Log validation details
-//            LogValidationExceptions = true
-//        };
-
-//        jwtOptions.Events = new JwtBearerEvents
-//        {
-//            OnAuthenticationFailed = context =>
-//            {
-//                Console.WriteLine($"❌ Authentication failed: {context.Exception.Message}");
-//                if (context.Exception is SecurityTokenInvalidAudienceException)
-//                {
-//                    Console.WriteLine($"   Expected audience: {string.Join(", ", jwtOptions.TokenValidationParameters.ValidAudiences)}");
-//                    Console.WriteLine($"   Token audience: {context.Exception.Data["InvalidAudience"]}");
-//                }
-//                return Task.CompletedTask;
-//            },
-//            OnTokenValidated = context =>
-//            {
-//                Console.WriteLine("✅ Token validated successfully");
-//                var claims = context.Principal?.Claims.Select(c => $"{c.Type}: {c.Value}");
-//                Console.WriteLine($"   Claims: {string.Join(", ", claims ?? Array.Empty<string>())}");
-//                return Task.CompletedTask;
-//            }
-//        };
-//    },
-//    msIdentityOptions =>
-//    {
-//        builder.Configuration.Bind("AzureAd", msIdentityOptions);
-//    });
-
-
 builder.Services
-    .AddMicrosoftIdentityWebApiAuthentication(builder.Configuration)
-    .EnableTokenAcquisitionToCallDownstreamApi()
-    .AddMicrosoftGraphAppOnly(authProvider => new Microsoft.Graph.GraphServiceClient(authProvider));
+     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
+     .EnableTokenAcquisitionToCallDownstreamApi()
+     .AddMicrosoftGraph(builder.Configuration.GetSection("MicrosoftGraph"))
+     .AddInMemoryTokenCaches();
+
+builder.Services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, options => options.Events = new RejectSessionCookieWhenAccountNotInCacheEvents());
 
 
 // Add Authorization
@@ -150,8 +73,11 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        //policy.WithOrigins("https://localhost:7208") // Blazor UI origin
-        policy.WithOrigins("https://hrsystem-azfkepg9eeadf7bx.southeastasia-01.azurewebsites.net/") // Azure UI 
+        policy
+              .WithOrigins(
+                            "https://hrsystem-azfkepg9eeadf7bx.southeastasia-01.azurewebsites.net",
+                            "https://localhost:7208"
+                        )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -162,12 +88,13 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
+    app.UseDeveloperExceptionPage();
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+// }
 
 app.UseHttpsRedirection();
 

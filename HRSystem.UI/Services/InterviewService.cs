@@ -9,58 +9,49 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace HRSystem.UI.Services
 {
-    public class InterviewService
+    public class InterviewService : IInterviewService
     {
         private readonly HttpClient httpClient;
-        private readonly ITokenService jwtService;
+        private readonly ITokenService tokenService;
 
-        public InterviewService(HttpClient httpClient, ITokenService jwtService)
+        public InterviewService(HttpClient httpClient, ITokenService tokenService)
         {
             this.httpClient = httpClient;
-            this.jwtService = jwtService;
+            this.tokenService = tokenService;
         }
 
         public async Task<List<InterviewDto>> GetAllAsync(int page = 1, int size = 10)
         {
-            await jwtService.ApplyTokenAsync(httpClient);
-            var response = await httpClient.GetAsync($"/api/Interview?p={page}&size={size}");
+            await tokenService.ApplyTokenAsync(httpClient);
+            var response = await httpClient.GetAsync($"api/Interviews?p={page}&size={size}");
             var rawJson = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Raw API response:");
-            Console.WriteLine(rawJson);
             if (!response.IsSuccessStatusCode) return new List<InterviewDto>();
             var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
-            Console.WriteLine("Deserialized PagedResult:");
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(result));
-            if (result?.Items != null)
-            {
-                foreach (var interview in result.Items)
-                {
-                    Console.WriteLine($"InterviewId: {interview.Id}, CandidateId: {interview.CandidateId}, CandidateName: {interview.CandidateName}, InterviewerId: {interview.InterviewerId}, InterviewerName: {interview.InterviewerName}");
-                }
-            }
+
             return result?.Items ?? new List<InterviewDto>();
         }
 
         public async Task<InterviewDto> GetByIdAsync(Guid id)
         {
-            await jwtService.ApplyTokenAsync(httpClient);
-            return await httpClient.GetFromJsonAsync<InterviewDto>($"/api/Interview/{id}");
+            await tokenService.ApplyTokenAsync(httpClient);
+            var interviewDto = await httpClient.GetFromJsonAsync<InterviewDto>($"api/Interviews/{id}");
+            return interviewDto;
         }
 
         public async Task<bool> AddAsync(AddInterviewRequestDto dto, IBrowserFile recordingFile)
         {
-            await jwtService.ApplyTokenAsync(httpClient);
+            await tokenService.ApplyTokenAsync(httpClient);
             using var form = new MultipartFormDataContent();
             form.Add(new StringContent(dto.Job ?? string.Empty), nameof(dto.Job));
             form.Add(new StringContent(dto.CandidateId.ToString()), nameof(dto.CandidateId));
-            form.Add(new StringContent(dto.InterviewerId.ToString()), nameof(dto.InterviewerId));
-            form.Add(new StringContent(dto.HrId.ToString()), nameof(dto.HrId));
+            form.Add(new StringContent(dto.InterviewerEmail ?? string.Empty), nameof(dto.InterviewerEmail));
+            form.Add(new StringContent(dto.HrEmail ?? string.Empty), nameof(dto.HrEmail));
             form.Add(new StringContent(dto.InterviewedAt.ToString("o")), nameof(dto.InterviewedAt));
             form.Add(new StringContent(dto.Status ?? "Scheduled"), nameof(dto.Status));
             if (dto.English.HasValue) form.Add(new StringContent(dto.English.Value.ToString()), nameof(dto.English));
             if (dto.Technical.HasValue) form.Add(new StringContent(dto.Technical.Value.ToString()), nameof(dto.Technical));
             if (dto.Recommend.HasValue) form.Add(new StringContent(dto.Recommend.Value.ToString()), nameof(dto.Recommend));
-   
+
             // If recording file is present, add it
             if (recordingFile != null)
             {
@@ -69,18 +60,18 @@ namespace HRSystem.UI.Services
                 fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recordingFile.ContentType);
                 form.Add(fileContent, "Recording", recordingFile.Name);
             }
-            var response = await httpClient.PostAsync("/api/Interview", form);
+            var response = await httpClient.PostAsync("api/Interviews", form);
             return response.IsSuccessStatusCode;
         }
 
         public async Task<bool> UpdateAsync(Guid id, UpdateInterviewRequestDto dto, IBrowserFile recordingFile)
         {
-            await jwtService.ApplyTokenAsync(httpClient);
+            await tokenService.ApplyTokenAsync(httpClient);
             var content = new MultipartFormDataContent();
             content.Add(new StringContent(dto.Job ?? string.Empty), "Job");
             content.Add(new StringContent(dto.CandidateId.ToString()), "CandidateId");
-            content.Add(new StringContent(dto.InterviewerId.ToString()), "InterviewerId");
-            content.Add(new StringContent(dto.HrId.ToString()), "HrId");
+            content.Add(new StringContent(dto.InterviewerEmail ?? string.Empty), "InterviewerEmail");
+            content.Add(new StringContent(dto.HrEmail ?? string.Empty), "HrEmail");
             content.Add(new StringContent(dto.InterviewedAt.ToString("o")), "InterviewedAt");
             content.Add(new StringContent(dto.Status ?? "Scheduled"), "Status");
             content.Add(new StringContent(dto.English.ToString()), "English");
@@ -94,21 +85,21 @@ namespace HRSystem.UI.Services
                 fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recordingFile.ContentType);
                 content.Add(fileContent, "Recording", recordingFile.Name);
             }
-            var response = await httpClient.PutAsync($"/api/Interview/{id}", content);
+            var response = await httpClient.PutAsync($"api/Interviews/{id}", content);
             return response.IsSuccessStatusCode;
         }
-                          
+
         public async Task<bool> DeleteAsync(Guid id)
         {
-            await jwtService.ApplyTokenAsync(httpClient);
-            var response = await httpClient.DeleteAsync($"/api/Interview/{id}");
+            await tokenService.ApplyTokenAsync(httpClient);
+            var response = await httpClient.DeleteAsync($"api/Interviews/{id}");
             return response.IsSuccessStatusCode;
         }
 
         public async Task<List<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10)
         {
-            await jwtService.ApplyTokenAsync(httpClient);
-            var response = await httpClient.GetAsync($"/api/Interview/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
+            await tokenService.ApplyTokenAsync(httpClient);
+            var response = await httpClient.GetAsync($"api/Interviews/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
             if (!response.IsSuccessStatusCode) return new List<InterviewDto>();
             var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
             return result?.Items ?? new List<InterviewDto>();

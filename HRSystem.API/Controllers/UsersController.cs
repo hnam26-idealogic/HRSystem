@@ -12,13 +12,13 @@ namespace HRSystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly IUserRepository userRepository;
         private readonly IMapper mapper;
         // private readonly ILogger<UserController> logger;
 
-        public UserController(IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserRepository userRepository, IMapper mapper)
         {
             this.userRepository = userRepository;
             this.mapper = mapper;
@@ -26,7 +26,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
-        [Authorize (Roles = "HR, Interviewer")]
+        
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
             var (pagedUsers, totalCount) = await userRepository.GetAllAsync(p, size);
@@ -65,10 +65,11 @@ namespace HRSystem.API.Controllers
         [Authorize (Roles = "HR")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateUserRequestDto updateUserRequestDto)
         {
-            var userEntity = mapper.Map<User>(updateUserRequestDto);
-            var updatedUser = await userRepository.UpdateAsync(id, userEntity);
-            var updatedUserDto = mapper.Map<UpdateUserRequestDto>(updatedUser);
-            return Ok(updatedUserDto);
+            return StatusCode(StatusCodes.Status501NotImplemented);
+            //var userEntity = mapper.Map<User>(updateUserRequestDto);
+            //var updatedUser = await userRepository.UpdateAsync(id, userEntity);
+            //var updatedUserDto = mapper.Map<UpdateUserRequestDto>(updatedUser);
+            //return Ok(updatedUserDto);
         }
 
         [HttpDelete("{id:Guid}")]

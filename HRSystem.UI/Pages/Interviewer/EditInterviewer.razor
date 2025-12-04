@@ -1,5 +1,5 @@
 @page "/interviewers/edit/{Id:guid}"
-@inject HRSystem.UI.Services.UserService UserService
+@inject IUserService UserService
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
@@ -61,7 +61,6 @@
             Fullname = interviewer.Fullname,
             PhoneNumber = interviewer.PhoneNumber,
             Specialty = interviewer.Specialty,
-            AccessLevel = null,
             UserType = "Interviewer"
         };
     }

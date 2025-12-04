@@ -1,27 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HRSystem.API.Models.Domain
 {
-    public class User : IdentityUser<Guid>
+    public class User
     {
         [Required]
+        public Guid Id { get; set; }
+        public string UserPrincipalName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public string Fullname { get; set; } = string.Empty;
-
-        [Required]
-        public UserType UserType { get; set; }
-
-        // HR-specific
-        public string? AccessLevel { get; set; } = null;
-
-        // Interviewer-specific
-        public string? Specialty { get; set; } = null;
-
-        // Navigation properties
-        [NotMapped]
-        public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
-        public DateTime? DeletedAt { get; set; } = null;
+        public List<string?> AppRoles { get; set; } = new List<string?>();
     }
 }

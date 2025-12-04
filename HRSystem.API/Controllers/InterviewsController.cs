@@ -12,7 +12,7 @@ namespace HRSystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class InterviewController : ControllerBase
+    public class InterviewsController : ControllerBase
     {
         private readonly IInterviewRepository interviewRepository;
         private readonly ICandidateRepository candidateRepository;
@@ -22,7 +22,7 @@ namespace HRSystem.API.Controllers
         private readonly List<Candidate> candidates;
         private readonly List<User> users;
 
-        public InterviewController(
+        public InterviewsController(
             IInterviewRepository interviewRepository,
             ICandidateRepository candidateRepository,
             IUserRepository userRepository,
@@ -49,8 +49,8 @@ namespace HRSystem.API.Controllers
             foreach (var dto in interviewDtos)
             {
                 dto.CandidateName = candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
-                dto.InterviewerName = users.FirstOrDefault(u => u.Id == dto.InterviewerId)?.Fullname ?? "";
-                dto.HRName = users.FirstOrDefault(u => u.Id == dto.HrId)?.Fullname ?? "";
+                dto.InterviewerName = users.FirstOrDefault(u => u.Email == dto.InterviewerEmail)?.Fullname ?? "";
+                dto.HrName = users.FirstOrDefault(u => u.Email == dto.HrEmail)?.Fullname ?? "";
             }
             return Ok(new
             {
@@ -69,8 +69,8 @@ namespace HRSystem.API.Controllers
             if (interview == null) return NotFound();
             var dto = mapper.Map<InterviewDto>(interview);
             dto.CandidateName = candidates.FirstOrDefault(c => c.Id == interview.CandidateId)?.Fullname ?? "";
-            dto.InterviewerName = users.FirstOrDefault(u => u.Id == interview.InterviewerId)?.Fullname ?? "";
-            dto.HRName = users.FirstOrDefault(u => u.Id == interview.HrId)?.Fullname ?? "";
+            dto.InterviewerName = users.FirstOrDefault(u => u.Email == interview.InterviewerEmail)?.Fullname ?? "";
+            dto.HrName = users.FirstOrDefault(u => u.Email == interview.HrEmail)?.Fullname ?? "";
             return Ok(dto);
         }
 
@@ -128,8 +128,8 @@ namespace HRSystem.API.Controllers
             foreach (var dto in interviewDtos)
             {
                 dto.CandidateName = candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
-                dto.InterviewerName = users.FirstOrDefault(u => u.Id == dto.InterviewerId)?.Fullname ?? "";
-                dto.HRName = users.FirstOrDefault(u => u.Id == dto.HrId)?.Fullname ?? "";
+                dto.InterviewerName = users.FirstOrDefault(u => u.Email == dto.InterviewerEmail)?.Fullname ?? "";
+                dto.HrName = users.FirstOrDefault(u => u.Email == dto.HrEmail)?.Fullname ?? "";
             }
             return Ok(new
             {

@@ -1,9 +1,12 @@
-@page "/interviews/add"
+﻿@page "/interviews/add"
 @using HRSystem.UI.DTOs
 @using HRSystem.UI.Models
-@inject HRSystem.UI.Services.InterviewService InterviewService
-@inject HRSystem.UI.Services.CandidateService CandidateService
-@inject HRSystem.UI.Services.UserService UserService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "HR")]
+@inject IInterviewService InterviewService
+@inject ICandidateService CandidateService
+@inject IUserService UserService
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 @inject HttpClient HttpClient
 
@@ -15,73 +18,107 @@
                     <h3 class="mb-0">Add Interview</h3>
                 </div>
                 <div class="card-body">
-                    <EditForm Model="@addInterviewModel" OnValidSubmit="HandleAddInterview">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>Candidate</label>
-                                <InputSelect class="form-select" @bind-Value="addInterviewModel.CandidateId">
-                                    <option value="">Select Candidate</option>
-                                    @foreach (var candidate in candidates)
-                                    {
-                                        <option value="@candidate.Id">@candidate.Fullname</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label>Interviewer</label>
-                                <InputSelect class="form-select" @bind-Value="addInterviewModel.InterviewerId">
-                                    <option value="">Select Interviewer</option>
-                                    @foreach (var interviewer in interviewers)
-                                    {
-                                        <option value="@interviewer.Id">@interviewer.Fullname</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label>HR</label>
-                                <InputSelect class="form-select" @bind-Value="addInterviewModel.HrId">
-                                    <option value="">Select HR</option>
-                                    @foreach (var hr in hrs)
-                                    {
-                                        <option value="@hr.Id">@hr.Fullname</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <InputText class="form-control" @bind-Value="addInterviewModel.Job" placeholder="Job" />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <InputDate class="form-control" @bind-Value="addInterviewModel.InterviewedAt" />
-                            </div>
-                            @* <div class="col-md-4 mb-3">
-                                <InputNumber class="form-control" @bind-Value="addInterviewModel.English" placeholder="English Score" />
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <InputNumber class="form-control" @bind-Value="addInterviewModel.Technical" placeholder="Technical Score" />
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <InputNumber class="form-control" @bind-Value="addInterviewModel.Recommend" placeholder="Recommend Score" />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <InputText class="form-control" @bind-Value="addInterviewModel.Status" placeholder="Status" />
-                            </div> *@
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label>Upload Recording</label>
-                            <InputFile class="form-control" OnChange="HandleRecordingChange" accept="audio/*,video/*" />
-                            @if (!string.IsNullOrEmpty(recordingErrorMessage))
-                            {
-                                <div class="text-danger mt-1">@recordingErrorMessage</div>
-                            }
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Add Interview</button>
-                        <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
-                    </EditForm>
-                    @if (!string.IsNullOrEmpty(errorMessage))
+                    @if (isLoading)
                     {
-                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span class="ms-2">Loading...</span>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(authorizationError))
+                    {
+                        <div class="alert alert-danger">
+                            <h5>Authorization Error</h5>
+                            <p>@authorizationError</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="@addInterviewModel" OnValidSubmit="HandleAddInterview">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Candidate</label>
+                                    <InputSelect class="form-select" @bind-Value="addInterviewModel.CandidateId">
+                                        <option value="">Select Candidate</option>
+                                        @foreach (var candidate in candidates)
+                                        {
+                                            <option value="@candidate.Id">@candidate.Fullname</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Interviewer</label>
+                                    <InputSelect class="form-select" @bind-Value="addInterviewModel.InterviewerEmail">
+                                        <option value="">Select Interviewer</option>
+                                        @foreach (var interviewer in interviewers)
+                                        {
+                                            <option value="@interviewer.Email">@interviewer.Fullname (@interviewer.Email)</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>HR (Current User)</label>
+                                    <input type="text" class="form-control bg-light" value="@currentHrDisplay" readonly />
+                                    <small class="text-muted">You will be assigned as the HR for this interview</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Job</label>
+                                    <InputText class="form-control" @bind-Value="addInterviewModel.Job" placeholder="Job Title" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Interview Date & Time</label>
+                                    <input type="datetime-local" class="form-control" @bind="addInterviewModel.InterviewedAt" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>English Score</label>
+                                    <InputNumber class="form-control" @bind-Value="addInterviewModel.English" placeholder="0-4" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Technical Score</label>
+                                    <InputNumber class="form-control" @bind-Value="addInterviewModel.Technical" placeholder="0-4" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label>Recommend Score</label>
+                                    <InputNumber class="form-control" @bind-Value="addInterviewModel.Recommend" placeholder="0-4" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Status</label>
+                                    <InputSelect class="form-select" @bind-Value="addInterviewModel.Status">
+                                        <option value="">Select Status</option>
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Pending">Pending</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Upload Recording</label>
+                                    <InputFile class="form-control" OnChange="HandleRecordingChange" accept="audio/*,video/*" />
+                                    @if (!string.IsNullOrEmpty(recordingErrorMessage))
+                                    {
+                                        <div class="text-danger mt-1">@recordingErrorMessage</div>
+                                    }
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Adding Interview...</span>
+                                }
+                                else
+                                {
+                                    <span>Add Interview</span>
+                                }
+                            </button>
+                            <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
+                        </EditForm>
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mt-3">@errorMessage</div>
+                        }
                     }
                 </div>
             </div>
@@ -93,44 +130,158 @@
     private AddInterviewRequestDto addInterviewModel = new();
     private List<CandidateDto> candidates = new();
     private List<UserDto> interviewers = new();
-    private List<UserDto> hrs = new();
-    private IBrowserFile recordingFile;
-    private string recordingErrorMessage;
-    private string errorMessage;
+    private IBrowserFile? recordingFile;
+    private string? recordingErrorMessage;
+    private string? errorMessage;
+    private string? authorizationError;
+    private string currentHrDisplay = "Loading...";
+    private bool isLoading = true;
+    private bool isSubmitting = false;
 
     protected override async Task OnInitializedAsync()
     {
-        candidates = await CandidateService.GetAllAsync();
-        var users = await UserService.GetAllAsync();
-        interviewers = users.Where(u => u.UserType == "Interviewer").ToList();
-        hrs = users.Where(u => u.UserType == "HR").ToList();
+        try
+        {
+            // Verify user is authenticated and has HR role
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                authorizationError = "You must be logged in to add interviews.";
+                isLoading = false;
+                return;
+            }
+
+            var isHR = await AuthService.IsInRoleAsync("HR");
+            if (!isHR)
+            {
+                authorizationError = "Only HR personnel can add interviews. Your current roles: " +
+                    string.Join(", ", await AuthService.GetCurrentUserRolesAsync());
+                isLoading = false;
+                return;
+            }
+
+            // Get current user information from claims (FAST - no API call)
+            var currentUserEmail = await AuthService.GetCurrentUserEmailAsync();
+            var currentUserName = await AuthService.GetCurrentUserNameAsync();
+
+            if (string.IsNullOrEmpty(currentUserEmail))
+            {
+                authorizationError = "Unable to retrieve your email from authentication token.";
+                isLoading = false;
+                return;
+            }
+
+            // Set HR email and display name
+            addInterviewModel.HrEmail = currentUserEmail;
+            currentHrDisplay = !string.IsNullOrEmpty(currentUserName)
+                ? $"{currentUserName} ({currentUserEmail})"
+                : currentUserEmail;
+
+            // Set default interview date/time to now
+            addInterviewModel.InterviewedAt = DateTime.Now;
+
+            // Load candidates and users in parallel for better performance
+            var candidatesTask = CandidateService.GetAllAsync();
+            var usersTask = UserService.GetAllAsync();
+
+            await Task.WhenAll(candidatesTask, usersTask);
+
+            candidates = await candidatesTask;
+            var users = await usersTask;
+
+            // Filter interviewers from loaded users
+            interviewers = users
+                .Where(u => u.AppRoles != null && u.AppRoles.Contains("Interviewer"))
+                .OrderBy(u => u.Fullname)
+                .ToList();
+
+            Console.WriteLine($"✅ Page loaded successfully for HR: {currentUserEmail}");
+            Console.WriteLine($"   - Candidates: {candidates.Count}");
+            Console.WriteLine($"   - Interviewers: {interviewers.Count}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load page: {ex.Message}";
+            Console.WriteLine($"❌ Error in OnInitializedAsync: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private void HandleRecordingChange(InputFileChangeEventArgs e)
     {
         recordingErrorMessage = string.Empty;
         var file = e.File;
+
         if (file == null)
         {
             recordingErrorMessage = "Please select a recording file.";
             recordingFile = null;
             return;
         }
-        // Optionally check file type/size here
+
+        // Optional: Validate file size (e.g., 100MB limit)
+        const long maxFileSize = 100 * 1024 * 1024; // 100MB
+        if (file.Size > maxFileSize)
+        {
+            recordingErrorMessage = "File size exceeds 100MB limit.";
+            recordingFile = null;
+            return;
+        }
+
         recordingFile = file;
     }
 
     private async Task HandleAddInterview()
     {
         errorMessage = string.Empty;
-        var success = await InterviewService.AddAsync(addInterviewModel, recordingFile);
-        if (success)
+        isSubmitting = true;
+
+        try
         {
-            Navigation.NavigateTo("/interviews");
+            // Validate required fields
+            if (addInterviewModel.CandidateId == Guid.Empty)
+            {
+                errorMessage = "Please select a candidate.";
+                return;
+            }
+
+            if (string.IsNullOrEmpty(addInterviewModel.InterviewerEmail))
+            {
+                errorMessage = "Please select an interviewer.";
+                return;
+            }
+
+            if (string.IsNullOrEmpty(addInterviewModel.Job))
+            {
+                errorMessage = "Please enter a job title.";
+                return;
+            }
+
+            // Submit to API
+            var success = await InterviewService.AddAsync(addInterviewModel, recordingFile);
+
+            if (success)
+            {
+                Console.WriteLine("✅ Interview added successfully");
+                Navigation.NavigateTo("/interviews");
+            }
+            else
+            {
+                errorMessage = "Failed to add interview. Please try again.";
+                Console.WriteLine("❌ Interview service returned false");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            errorMessage = "Failed to add interview.";
+            errorMessage = $"Error: {ex.Message}";
+            Console.WriteLine($"❌ Error adding interview: {ex}");
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 

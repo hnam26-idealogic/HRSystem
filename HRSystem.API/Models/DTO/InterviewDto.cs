@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HRSystem.API.Models.DTO
 {
@@ -8,10 +9,12 @@ namespace HRSystem.API.Models.DTO
         public string Job { get; set; } = string.Empty;
         public Guid CandidateId { get; set; }
         public string CandidateName { get; set; }
-        public Guid InterviewerId { get; set; }
+        public string InterviewerEmail { get; set; }
+        [NotMapped]
         public string InterviewerName { get; set; }
-        public Guid HrId { get; set; }
-        public string HRName { get; set; }
+        public string HrEmail { get; set; }
+        [NotMapped]
+        public string HrName { get; set; }
         public DateTime InterviewedAt { get; set; }
         public string Recording { get; set; }
         public int English { get; set; }

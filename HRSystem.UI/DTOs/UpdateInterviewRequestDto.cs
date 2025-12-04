@@ -13,10 +13,10 @@ namespace HRSystem.UI.DTOs
         public Guid CandidateId { get; set; }
 
         [Required]
-        public Guid InterviewerId { get; set; }
+        public string InterviewerEmail { get; set; }
 
         [Required]
-        public Guid HrId { get; set; }
+        public string HrEmail { get; set; }
 
         [Required]
         public DateTime InterviewedAt { get; set; }

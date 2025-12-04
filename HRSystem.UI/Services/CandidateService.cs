@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HRSystem.UI.Services
 {
-    public class CandidateService
+    public class CandidateService : ICandidateService
     {
         private readonly HttpClient httpClient;
         private readonly ITokenService tokenService;
@@ -21,7 +21,7 @@ namespace HRSystem.UI.Services
         public async Task<List<CandidateDto>> GetAllAsync(int page = 1, int size = 10)
         {
             await tokenService.ApplyTokenAsync(httpClient);
-            var response = await httpClient.GetAsync($"/api/Candidate?p={page}&size={size}");
+            var response = await httpClient.GetAsync($"/api/Candidates?p={page}&size={size}");
             if (!response.IsSuccessStatusCode) return new List<CandidateDto>();
             var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
             return result?.Items ?? new List<CandidateDto>();
@@ -30,7 +30,7 @@ namespace HRSystem.UI.Services
         public async Task<CandidateDto> GetByIdAsync(Guid id)
         {
             await tokenService.ApplyTokenAsync(httpClient);
-            return await httpClient.GetFromJsonAsync<CandidateDto>($"/api/Candidate/{id}");
+            return await httpClient.GetFromJsonAsync<CandidateDto>($"/api/Candidates/{id}");
         }
 
         public async Task<bool> AddAsync(AddCandidateRequestDto dto, IBrowserFile resumeFile)
@@ -46,7 +46,7 @@ namespace HRSystem.UI.Services
                 content.Add(new StreamContent(stream), "Resume", resumeFile.Name);
             }
 
-            var response = await httpClient.PostAsync("/api/Candidate", content);
+            var response = await httpClient.PostAsync("/api/Candidates", content);
             return response.IsSuccessStatusCode;
         }
 
@@ -62,21 +62,21 @@ namespace HRSystem.UI.Services
                 content.Add(new StreamContent(stream), "Resume", resumeFile.Name);
             }
 
-            var response = await httpClient.PutAsync($"/api/Candidate/{id}", content);
+            var response = await httpClient.PutAsync($"/api/Candidates/{id}", content);
             return response.IsSuccessStatusCode;
         }
 
         public async Task<bool> DeleteAsync(Guid id)
         {
             await tokenService.ApplyTokenAsync(httpClient);
-            var response = await httpClient.DeleteAsync($"/api/Candidate/{id}");
+            var response = await httpClient.DeleteAsync($"/api/Candidates/{id}");
             return response.IsSuccessStatusCode;
         }
 
         public async Task<List<CandidateDto>> SearchAsync(string query, int page = 1, int size = 10)
         {
             await tokenService.ApplyTokenAsync(httpClient);
-            var response = await httpClient.GetAsync($"/api/Candidate/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
+            var response = await httpClient.GetAsync($"/api/Candidates/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
             if (!response.IsSuccessStatusCode) return new List<CandidateDto>();
             var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
             return result?.Items ?? new List<CandidateDto>();
@@ -85,7 +85,7 @@ namespace HRSystem.UI.Services
         public async Task<string> GetResumeUrlAsync(Guid candidateId)
         {
             await tokenService.ApplyTokenAsync(httpClient);
-            var response = await httpClient.GetAsync($"/api/Candidate/{candidateId}/resume-url");
+            var response = await httpClient.GetAsync($"/api/Candidates/{candidateId}/resume-url");
             if (!response.IsSuccessStatusCode)
             {
                 return null;

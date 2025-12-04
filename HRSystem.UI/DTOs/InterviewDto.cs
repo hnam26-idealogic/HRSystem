@@ -8,10 +8,10 @@ namespace HRSystem.UI.DTOs
         public string Job { get; set; } = string.Empty;
         public Guid CandidateId { get; set; }
         public string CandidateName { get; set; }
-        public Guid InterviewerId { get; set; }
+        public string InterviewerEmail { get; set; }
         public string InterviewerName { get; set; }
-        public Guid HrId { get; set; }
-        public string HRName { get; set; }
+        public string HrEmail { get; set; }
+        public string HrName { get; set; }
         public DateTime InterviewedAt { get; set; }
         public string Recording { get; set; }
         public int English { get; set; }

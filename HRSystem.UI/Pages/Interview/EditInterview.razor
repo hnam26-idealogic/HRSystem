@@ -1,12 +1,12 @@
 @page "/interviews/edit/{Id:guid}"
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.AspNetCore.Components.Forms
 @using HRSystem.UI.DTOs
-@inject HRSystem.UI.Services.InterviewService InterviewService
-@inject HRSystem.UI.Services.CandidateService CandidateService
-@inject HRSystem.UI.Services.UserService UserService
-@inject HRSystem.UI.Services.AuthService AuthService
+@inject IInterviewService InterviewService
+@inject ICandidateService CandidateService
+@inject IUserService UserService
+@inject IAuthService AuthService
+
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
@@ -47,12 +47,15 @@
                                         }
                                     </div>
                                     <div class="col-md-4 mb-3">
+                                        <label>English Score</label>
                                         <InputNumber class="form-control" @bind-value="editInterviewModel.English" placeholder="English Score" />
                                     </div>
                                     <div class="col-md-4 mb-3">
+                                        <label>Technical Score</label>
                                         <InputNumber class="form-control" @bind-value="editInterviewModel.Technical" placeholder="Technical Score" />
                                     </div>
                                     <div class="col-md-4 mb-3">
+                                        <label>Recommend Score</label>
                                         <InputNumber class="form-control" @bind-value="editInterviewModel.Recommend" placeholder="Recommend Score" />
                                     </div>
                                 }
@@ -60,35 +63,41 @@
                                 {
                                     <div class="col-md-6 mb-3">
                                         <label>Candidate</label>
-                                        <input class="form-control" value="@candidates.FirstOrDefault(c => c.Id == editInterviewModel.CandidateId)?.Fullname" />
+                                        <input class="form-control" value="@candidates.FirstOrDefault(c => c.Id == editInterviewModel.CandidateId)?.Fullname" readonly />
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label>Interviewer</label>
-                                        <InputSelect class="form-select" @bind-value="editInterviewModel.InterviewerId">
+                                        <InputSelect class="form-select" @bind-value="editInterviewModel.InterviewerEmail">
                                             <option value="">Select Interviewer</option>
                                             @foreach (var interviewer in interviewers)
                                             {
-                                                <option value="@interviewer.Id">@interviewer.Fullname</option>
+                                                <option value="@interviewer.Email">@interviewer.Fullname (@interviewer.Email)</option>
                                             }
                                         </InputSelect>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label>HR</label>
-                                        <input class="form-control" value="@hrs.FirstOrDefault(h => h.Id == editInterviewModel.HrId)?.Fullname" />
+                                        <input type="text" class="form-control bg-light" value="@currentHrDisplay" readonly />
+                                        <small class="text-muted">You will be assigned as the HR for this interview</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
+                                        <label>Job</label>
                                         <InputText class="form-control" @bind-value="editInterviewModel.Job" placeholder="Job" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <InputDate class="form-control" @bind-value="editInterviewModel.InterviewedAt" />
+                                        <label>Interview Date & Time</label>
+                                        <input type="datetime-local" class="form-control" @bind="editInterviewModel.InterviewedAt" />
                                     </div>
                                     <div class="col-md-4 mb-3">
+                                        <label>English Score</label>
                                         <InputNumber class="form-control" @bind-value="editInterviewModel.English" placeholder="English Score" />
                                     </div>
                                     <div class="col-md-4 mb-3">
+                                        <label>Technical Score</label>
                                         <InputNumber class="form-control" @bind-value="editInterviewModel.Technical" placeholder="Technical Score" />
                                     </div>
                                     <div class="col-md-4 mb-3">
+                                        <label>Recommend Score</label>
                                         <InputNumber class="form-control" @bind-value="editInterviewModel.Recommend" placeholder="Recommend Score" />
                                     </div>
                                     <div class="col-md-6 mb-3">
@@ -140,30 +149,32 @@
     private List<UserDto> hrs = new();
     private IBrowserFile editRecordingFile;
     private string errorMessage;
+    private string? authorizationError;
     private string currentRecordingPath;
     private string recordingErrorMessage;
     private bool IsInterviewer;
-
+    private string currentHrDisplay = "Loading...";
+    private bool isLoading = true;
+    
     protected override async Task OnInitializedAsync()
     {
+        
         var interview = await InterviewService.GetByIdAsync(Id);
-        // Fetch only the candidate and HR by their IDs
         var candidate = await CandidateService.GetByIdAsync(interview.CandidateId);
-        var hr = await UserService.GetByIdAsync(interview.HrId);
-        // Fetch all interviewers for dropdown
         var allUsers = await UserService.GetAllAsync();
-        interviewers = allUsers.Where(u => u.UserType.ToString() == "Interviewer").ToList();
+        interviewers = allUsers.Where(u => u.AppRoles != null && u.AppRoles.Contains("Interviewer")).ToList();
+        hrs = allUsers.Where(u => u.AppRoles != null && u.AppRoles.Contains("HR")).ToList();
 
         candidates = candidate != null ? new List<CandidateDto> { candidate } : new List<CandidateDto>();
-        hrs = hr != null ? new List<UserDto> { hr } : new List<UserDto>();
 
         editInterviewModel = new UpdateInterviewRequestDto
         {
             CandidateId = interview.CandidateId,
-            InterviewerId = interview.InterviewerId,
-            HrId = interview.HrId,
+            InterviewerEmail = interview.InterviewerEmail,
+            HrEmail = interview.HrEmail,
             Job = interview.Job,
-            InterviewedAt = interview.InterviewedAt,
+            // Set current datetime if InterviewedAt is not set
+            InterviewedAt = interview.InterviewedAt == default ? DateTime.Now : interview.InterviewedAt,
             English = interview.English,
             Technical = interview.Technical,
             Recommend = interview.Recommend,
@@ -171,12 +182,26 @@
         };
         currentRecordingPath = interview.Recording;
 
-        // Get current user id and user type
-        var currentUserId = await AuthService.GetCurrentUserIdAsync() ?? Guid.Empty;
-        var currentUser = await UserService.GetByIdAsync(currentUserId);
-        IsInterviewer = currentUser != null && currentUser.UserType.ToString() == "Interviewer";
+        // Get current user information from claims (FAST - no API call)
+            var currentUserEmail = await AuthService.GetCurrentUserEmailAsync();
+            var currentUserName = await AuthService.GetCurrentUserNameAsync();
 
-        Console.WriteLine(editInterviewModel);
+            if (string.IsNullOrEmpty(currentUserEmail))
+            {
+                authorizationError = "Unable to retrieve your email from authentication token.";
+                isLoading = false;
+                return;
+            }
+
+            // Set HR email and display name
+            editInterviewModel.HrEmail = currentUserEmail;
+            currentHrDisplay = !string.IsNullOrEmpty(currentUserName)
+                ? $"{currentUserName} ({currentUserEmail})"
+                : currentUserEmail;
+
+        IsInterviewer = await AuthService.IsInRoleAsync("HR");
+
+    
     }
 
     private void HandleEditRecordingChange(InputFileChangeEventArgs e)
@@ -189,14 +214,11 @@
             editRecordingFile = null;
             return;
         }
-        // Optionally check file type/size here
         editRecordingFile = file;
     }
 
     private async Task HandleEditInterview()
     {
-        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(editInterviewModel));
-        Console.WriteLine(Id);
         var success = await InterviewService.UpdateAsync(Id, editInterviewModel, editRecordingFile);
         if (success)
         {

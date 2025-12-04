@@ -10,11 +10,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-//// Set HttpClient to use the API server address
-//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://hrsystem-api-1-ajcghmadc8cwd5hb.southeastasia-01.azurewebsites.net") });
-////builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7106") });
-
-
 // Configure HttpClient with authentication
 var apiBaseUrl = builder.Configuration["Api:BaseUrl"];
 
@@ -36,11 +31,11 @@ builder.Services.AddScoped(sp =>
     sp.GetRequiredService<IHttpClientFactory>().CreateClient("AuthenticatedAPI"));
 
 
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, EntraIdTokenService>();
-builder.Services.AddScoped<CandidateService>();
-builder.Services.AddScoped<InterviewService>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ICandidateService, CandidateService>();
+builder.Services.AddScoped<IInterviewService, InterviewService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.Configure<FormOptions>(options => { options.MultipartBodyLengthLimit = 104857600; }); // 100MB
 
@@ -58,10 +53,11 @@ builder.Services.AddMsalAuthentication(options =>
             options.ProviderOptions.DefaultAccessTokenScopes.Add(scope);
         }
     }
+    //options.ProviderOptions.DefaultAccessTokenScopes.Add("User.Read.All");
 
     options.UserOptions.RoleClaim = "roles";
 })
-    .AddAccountClaimsPrincipalFactory<CustomUserFactory>(); // <-- Add this line
+    .AddAccountClaimsPrincipalFactory<CustomUserFactory>(); 
 
 // Register custom user factory
 builder.Services.AddScoped<CustomUserFactory>();

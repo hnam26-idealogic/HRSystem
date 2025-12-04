@@ -14,10 +14,10 @@ namespace HRSystem.API.Models.DTO
         public Guid CandidateId { get; set; }
 
         [Required]
-        public Guid InterviewerId { get; set; }
+        public string InterviewerEmail { get; set; } = string.Empty;
 
         [Required]
-        public Guid HrId { get; set; }
+        public string HrEmail { get; set; } = string.Empty;
 
         [Required]
         public DateTime InterviewedAt { get; set; }

@@ -1,6 +1,6 @@
 @page "/interviews/{Id:guid}"
 @using HRSystem.UI.DTOs
-@inject HRSystem.UI.Services.InterviewService InterviewService
+@inject IInterviewService InterviewService
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
@@ -24,9 +24,9 @@
                             <dt class="col-sm-4">Candidate</dt>
                             <dd class="col-sm-8">@interview.CandidateName</dd>
                             <dt class="col-sm-4">Interviewer</dt>
-                            <dd class="col-sm-8">@interview.InterviewerName</dd>
+                                <dd class="col-sm-8">@interview.InterviewerEmail</dd>
                             <dt class="col-sm-4">HR</dt>
-                            <dd class="col-sm-8">@interview.HRName</dd>
+                                <dd class="col-sm-8">@interview.HrEmail</dd>
                             <dt class="col-sm-4">Job</dt>
                             <dd class="col-sm-8">@interview.Job</dd>
                             <dt class="col-sm-4">Interviewed At</dt>

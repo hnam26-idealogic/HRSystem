@@ -15,12 +15,12 @@ namespace HRSystem.API.Models.Domain
         public Candidate Candidate { get; set; } = null!;
 
         [Required]
-        public Guid InterviewerId { get; set; }
-        public User Interviewer { get; set; } = null!; // Interviewer is a User
+        [EmailAddress]
+        public string InterviewerEmail { get; set; } = string.Empty;
 
         [Required]
-        public Guid HrId { get; set; }
-        public User HR { get; set; } = null!; // HR is a User
+        [EmailAddress]
+        public string HrEmail { get; set; } = string.Empty;
 
         public DateTime InterviewedAt { get; set; }
         [NotMapped]

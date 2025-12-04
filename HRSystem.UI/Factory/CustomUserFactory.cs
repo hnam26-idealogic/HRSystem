@@ -23,11 +23,6 @@ public class CustomUserFactory : AccountClaimsPrincipalFactory<RemoteUserAccount
 
         if (user.Identity is ClaimsIdentity identity && identity.IsAuthenticated)
         {
-            Console.WriteLine("=== Creating User - ID Token Claims ===");
-            foreach (var claim in identity.Claims)
-            {
-                Console.WriteLine($"  {claim.Type}: {claim.Value}");
-            }
 
             // Get roles from access token
             try
@@ -36,8 +31,6 @@ public class CustomUserFactory : AccountClaimsPrincipalFactory<RemoteUserAccount
 
                 if (tokenResult.TryGetToken(out var accessToken))
                 {
-                    Console.WriteLine("=== Access Token Retrieved ===");
-
                     // Parse JWT access token
                     var claims = ParseClaimsFromJwt(accessToken.Value);
 
@@ -49,29 +42,19 @@ public class CustomUserFactory : AccountClaimsPrincipalFactory<RemoteUserAccount
 
                     if (roleClaims.Any())
                     {
-                        Console.WriteLine("=== Roles Found in Access Token ===");
                         foreach (var roleClaim in roleClaims)
                         {
                             // Add as standard Role claim type
                             var roleValue = roleClaim.Value;
                             identity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
                             identity.AddClaim(new Claim("roles", roleValue));
-                            Console.WriteLine($"  ✅ Added Role: {roleValue}");
                         }
                     }
-                    else
-                    {
-                        Console.WriteLine("  ⚠️ No roles found in access token");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("  ❌ Failed to retrieve access token");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"  ❌ Error retrieving access token: {ex.Message}");
+                throw new Exception($"Error retrieving access token: {ex.Message}");
             }
 
             // Also check AdditionalProperties for roles
@@ -89,7 +72,6 @@ public class CustomUserFactory : AccountClaimsPrincipalFactory<RemoteUserAccount
                             {
                                 identity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
                                 identity.AddClaim(new Claim("roles", roleValue));
-                                Console.WriteLine($"  ✅ Added Role from properties: {roleValue}");
                             }
                         }
                     }
@@ -100,23 +82,11 @@ public class CustomUserFactory : AccountClaimsPrincipalFactory<RemoteUserAccount
                         {
                             identity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
                             identity.AddClaim(new Claim("roles", roleValue));
-                            Console.WriteLine($"  ✅ Added Role from properties: {roleValue}");
                         }
                     }
                 }
             }
-
-            Console.WriteLine("=== Final User Claims (Including Roles) ===");
-            foreach (var claim in identity.Claims)
-            {
-                if (claim.Type == ClaimTypes.Role || claim.Type == "roles")
-                {
-                    Console.WriteLine($"  🎯 {claim.Type}: {claim.Value}");
-                }
-            }
-            Console.WriteLine("==================");
         }
-
         return user;
     }
 
@@ -165,7 +135,7 @@ public class CustomUserFactory : AccountClaimsPrincipalFactory<RemoteUserAccount
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error parsing JWT: {ex.Message}");
+            throw new Exception($"Error parsing JWT: {ex.Message}");
         }
 
         return claims;
