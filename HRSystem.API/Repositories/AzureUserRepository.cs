@@ -15,15 +15,8 @@ namespace HRSystem.API.Repositories
         public AzureUserRepository(Microsoft.Graph.GraphServiceClient graphServiceClient, IConfiguration configuration, ConvertAppRolesHelper convertAppRolesHelper)
         {
             this._graphServiceClient = graphServiceClient;
-            this._configuration = configuration;
-            this.convertAppRolesHelper = convertAppRolesHelper;
-            var clientSecretCredential = new ClientSecretCredential(
-                configuration["AzureAd:TenantId"],
-                configuration["AzureAd:ClientId"],
-                configuration["AzureAd:ClientSecret"]
-            );
 
-            _graphServiceClient = new GraphServiceClient(clientSecretCredential);
+
         }
 
         public Task<Models.Domain.User> AddAsync(Models.Domain.User user, string password)

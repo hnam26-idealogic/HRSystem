@@ -26,7 +26,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet]
-        
+        [Authorize (Roles = "HR")]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
             var (pagedUsers, totalCount) = await userRepository.GetAllAsync(p, size);
@@ -41,7 +41,7 @@ namespace HRSystem.API.Controllers
         }
 
         [HttpGet("{id:Guid}")]
-        [Authorize (Roles = "HR, Interviewer")]
+        [Authorize (Roles = "HR")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             var userEntity = await userRepository.GetByIdAsync(id);
