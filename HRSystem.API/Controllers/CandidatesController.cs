@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web.Resource;
+using Microsoft.Extensions.Logging;
 
 namespace HRSystem.API.Controllers
 {
@@ -16,26 +17,26 @@ namespace HRSystem.API.Controllers
     [ApiController]
     public class CandidatesController : ControllerBase
     {
+        private readonly ILogger<CandidatesController> _logger;
         static readonly string[] scopeRequiredByApi = new string[] { "access_as_user" };
 
         private readonly ICandidateRepository candidateRepository;
         private readonly IFileStorageService fileStorageService;
         private readonly IMapper mapper;
-        private readonly ILogger<CandidatesController> logger;
 
-        public CandidatesController(ICandidateRepository candidateRepository, IFileStorageService fileStorageService, IMapper mapper, ILogger<CandidatesController>  logger)
+        public CandidatesController(ICandidateRepository candidateRepository, IFileStorageService fileStorageService, IMapper mapper, ILogger<CandidatesController> logger)
         {
             this.candidateRepository = candidateRepository;
             this.fileStorageService = fileStorageService;
             this.mapper = mapper;
-            this.logger = logger;
+            _logger = logger;
         }
 
         [HttpGet]
         [Authorize(Roles = "HR,Interviewer")]
         public async Task<IActionResult> GetAll([FromQuery] int p = 1, [FromQuery] int size = 10)
         {
-            logger.LogInformation("Getting all candidates, page: {Page}, size: {Size}", p, size);
+            _logger.LogInformation("Getting all candidates, page: {Page}, size: {Size}", p, size);
             HttpContext.VerifyUserHasAnyAcceptedScope(scopeRequiredByApi);
 
             var (pagedCandidates, totalCount) = await candidateRepository.GetAllAsync(p, size);
@@ -53,11 +54,11 @@ namespace HRSystem.API.Controllers
         [Authorize(Roles = "HR, Interviewer")]
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
-            logger.LogInformation("Getting candidate by ID: {Id}", id);
+            _logger.LogInformation("Getting candidate by ID: {Id}", id);
             var candidate = await candidateRepository.GetByIdAsync(id);
             if (candidate == null) 
             {
-                logger.LogWarning("Candidate not found with ID: {Id}", id);
+                _logger.LogWarning("Candidate not found with ID: {Id}", id);
                 return NotFound();
             }
             return Ok(mapper.Map<CandidateDto>(candidate));
@@ -67,16 +68,16 @@ namespace HRSystem.API.Controllers
         [Authorize(Roles = "HR, Interviewer")]
         public async Task<IActionResult> GetResumeUrl([FromRoute] Guid id)
         {
-            logger.LogInformation("Getting resume URL for candidate ID: {Id}", id);
+            _logger.LogInformation("Getting resume URL for candidate ID: {Id}", id);
             var candidate = await candidateRepository.GetByIdAsync(id);
             if (candidate == null || string.IsNullOrEmpty(candidate.ResumePath))
             {
-                logger.LogWarning("Candidate or resume not found for ID: {Id}", id);
+                _logger.LogWarning("Candidate or resume not found for ID: {Id}", id);
                 return NotFound();
             }
 
             var sasUrl = fileStorageService.GetBlobSasUrl(candidate.ResumePath, 10); // 10 min expiry
-            logger.LogInformation("Generated resume SAS URL for candidate ID: {Id}", id);
+            _logger.LogInformation("Generated resume SAS URL for candidate ID: {Id}", id);
             return Ok(sasUrl);
         }
 
@@ -85,12 +86,12 @@ namespace HRSystem.API.Controllers
         [Authorize(Roles = "HR")]
         public async Task<IActionResult> Add([FromForm] AddCandidateRequestDto addCandidateRequestDto)
         {
-            logger.LogInformation("Adding a new candidate with email: {Email}", addCandidateRequestDto.Email);
+            _logger.LogInformation("Adding a new candidate with email: {Email}", addCandidateRequestDto.Email);
             // Check if email exists
             var existingCandidate = await candidateRepository.GetByEmailAsync(addCandidateRequestDto.Email);
             if (existingCandidate != null)
             {
-                logger.LogWarning("Attempt to add a candidate with an existing email: {Email}", addCandidateRequestDto.Email);
+                _logger.LogWarning("Attempt to add a candidate with an existing email: {Email}", addCandidateRequestDto.Email);
                 ModelState.AddModelError("Email", "A candidate with this email already exists.");
                 return ValidationProblem(ModelState);
             }
@@ -104,7 +105,7 @@ namespace HRSystem.API.Controllers
 
             var createdCandidate = await candidateRepository.AddAsync(candidateEntity);
             var createdCandidateDto = mapper.Map<CandidateDto>(createdCandidate);
-            logger.LogInformation("Added new candidate with ID: {Id}", createdCandidateDto.Id);
+            _logger.LogInformation("Added new candidate with ID: {Id}", createdCandidateDto.Id);
             return CreatedAtAction(nameof(GetById), new { id = createdCandidateDto.Id }, createdCandidateDto);
         }
 
@@ -113,11 +114,11 @@ namespace HRSystem.API.Controllers
         [Authorize(Roles = "HR")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] UpdateCandidateRequestDto updateCandidateRequestDto)
         {
-            logger.LogInformation("Updating candidate ID: {Id}", id);
+            _logger.LogInformation("Updating candidate ID: {Id}", id);
             // Optionally require resume on update
             if (updateCandidateRequestDto.Resume == null)
             {
-                logger.LogWarning("Attempt to update candidate ID: {Id} without a resume file.", id);
+                _logger.LogWarning("Attempt to update candidate ID: {Id} without a resume file.", id);
                 ModelState.AddModelError("Resume", "Resume file is required for update.");
                 return ValidationProblem(ModelState);
             }
@@ -129,7 +130,7 @@ namespace HRSystem.API.Controllers
 
             var updatedCandidate = await candidateRepository.UpdateAsync(id, candidateEntity);
             var updatedCandidateDto = mapper.Map<CandidateDto>(updatedCandidate);
-            logger.LogInformation("Updated candidate ID: {Id}", id);
+            _logger.LogInformation("Updated candidate ID: {Id}", id);
             return Ok(updatedCandidateDto);
         }
 
@@ -137,14 +138,14 @@ namespace HRSystem.API.Controllers
         [Authorize(Roles = "HR")]
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
-            logger.LogInformation("Deleting candidate ID: {Id}", id);
+            _logger.LogInformation("Deleting candidate ID: {Id}", id);
             var deleted = await candidateRepository.DeleteAsync(id);
             if (!deleted) 
             {
-                logger.LogWarning("Candidate not found for deletion with ID: {Id}", id);
+                _logger.LogWarning("Candidate not found for deletion with ID: {Id}", id);
                 return NotFound();
             }
-            logger.LogInformation("Deleted candidate ID: {Id}", id);
+            _logger.LogInformation("Deleted candidate ID: {Id}", id);
             return NoContent();
         }
 
@@ -152,7 +153,7 @@ namespace HRSystem.API.Controllers
         [Authorize(Roles = "HR, Interviewer")]
         public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int p = 1, [FromQuery] int size = 10)
         {
-            logger.LogInformation("Searching candidates with query: {Query}, page: {Page}, size: {Size}", query, p, size);
+            _logger.LogInformation("Searching candidates with query: {Query}, page: {Page}, size: {Size}", query, p, size);
             var (candidates, totalCount) = await candidateRepository.SearchAsync(query, p, size);
             var candidateDtos = mapper.Map<List<CandidateDto>>(candidates);
             return Ok(new

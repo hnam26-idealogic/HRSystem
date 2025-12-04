@@ -11,6 +11,7 @@ using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using HRSystem.API.Services;
 using System.Text.Json.Serialization;
+using Azure.Storage.Blobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,13 @@ var azureSqlConnection = builder.Configuration.GetConnectionString("AzureSqlConn
 var localSqlConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<HRSystemDBContext>(options =>
     options.UseSqlServer(!string.IsNullOrEmpty(azureSqlConnection) ? azureSqlConnection : localSqlConnection));
+
+// Register Azure Blob Storage
+var azureBlobConnectionString = builder.Configuration.GetConnectionString("AzureBlobStorage");
+if (!string.IsNullOrEmpty(azureBlobConnectionString))
+{
+    builder.Services.AddSingleton(x => new BlobServiceClient(azureBlobConnectionString));
+}
 
 builder.Services.AddScoped<IUserRepository, AzureUserRepository>();
 builder.Services.AddScoped<ICandidateRepository, SQLCandidateRepository>();
