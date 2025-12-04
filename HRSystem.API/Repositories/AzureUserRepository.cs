@@ -15,7 +15,7 @@ namespace HRSystem.API.Repositories
         public AzureUserRepository(Microsoft.Graph.GraphServiceClient graphServiceClient, IConfiguration configuration, ConvertAppRolesHelper convertAppRolesHelper)
         {
             this._graphServiceClient = graphServiceClient;
-
+            this._configuration = configuration;
 
         }
 

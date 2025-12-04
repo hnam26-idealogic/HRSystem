@@ -1,8 +1,8 @@
 ﻿using HRSystem.API.Data;
-using HRSystem.API.Helper;
 using HRSystem.API.Mappings;
 using HRSystem.API.Repositories;
 using HRSystem.API.Services;
+using HRSystem.API.Helper;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -36,10 +36,9 @@ builder.Services.AddScoped<IUserRepository, AzureUserRepository>();
 builder.Services.AddScoped<ICandidateRepository, SQLCandidateRepository>();
 builder.Services.AddScoped<IInterviewRepository, SQLInterviewRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
-//builder.Services.AddScoped<IAuthService, AuthService>();
-//builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
 builder.Services.AddScoped<IRecordingStorageService, LocalRecordingStorageService>();
+
 builder.Services.AddScoped<ConvertAppRolesHelper>();
 
 
@@ -88,13 +87,13 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
+if (app.Environment.IsDevelopment())
+{
     app.UseDeveloperExceptionPage();
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
-// }
+}
 
 app.UseHttpsRedirection();
 
@@ -116,5 +115,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
+
+// app.UseMiddleware<HRSystem.API.Middleware.ErrorHandlingMiddleware>();
 
 app.Run();

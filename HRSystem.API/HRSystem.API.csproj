@@ -24,6 +24,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Microsoft.Identity.Web" Version="4.0.1" />
     <PackageReference Include="Microsoft.Identity.Web.MicrosoftGraph" Version="4.0.1" />
     <PackageReference Include="Microsoft.Identity.Web.TokenCache" Version="4.0.1" />

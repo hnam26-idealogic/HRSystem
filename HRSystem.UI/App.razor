@@ -1,86 +1,98 @@
-﻿<CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(App).Assembly">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                <Authorizing>
-                    <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
-                        <div class="text-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-3">Verifying authentication...</p>
-                        </div>
-                    </div>
-                </Authorizing>
-                <NotAuthorized>
-                    @if (context.User.Identity?.IsAuthenticated == true)
-                    {
-                        <!-- User is logged in but doesn't have the required role -->
-                        <div class="container mt-5">
-                            <div class="alert alert-danger">
-                                <h4 class="alert-heading">
-                                    <i class="bi bi-exclamation-triangle-fill"></i> Access Denied
-                                </h4>
-                                <hr>
-                                <p>You don't have permission to access this page.</p>
-                                <p class="mb-0">
-                                    <strong>Your roles:</strong> 
-                                    @{
-                                        var roles = context.User.Claims
-                                            .Where(c => c.Type == "roles")
-                                            .Select(c => c.Value)
-                                            .ToList();
-                                        
-                                        if (roles.Any())
-                                        {
-                                            <span>@string.Join(", ", roles)</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">No roles assigned</span>
-                                        }
-                                    }
-                                </p>
-                                <hr>
-                                <p class="mb-0">
-                                    Please contact your administrator if you believe this is an error.
-                                </p>
-                                <div class="mt-3">
-                                    <a href="/" class="btn btn-primary">
-                                        <i class="bi bi-house-door"></i> Go to Home
-                                    </a>
-                                    <a href="authentication/logout" class="btn btn-outline-secondary ms-2">
-                                        <i class="bi bi-box-arrow-right"></i> Logout
-                                    </a>
+﻿<ErrorBoundary>
+    <ChildContent>
+        <CascadingAuthenticationState>
+            <Router AppAssembly="@typeof(App).Assembly">
+                <Found Context="routeData">
+                    <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                        <Authorizing>
+                            <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-3">Verifying authentication...</p>
                                 </div>
                             </div>
+                        </Authorizing>
+                        <NotAuthorized>
+                            @if (context.User.Identity?.IsAuthenticated == true)
+                            {
+                                <!-- User is logged in but doesn't have the required role -->
+                                <div class="container mt-5">
+                                    <div class="alert alert-danger">
+                                        <h4 class="alert-heading">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Access Denied
+                                        </h4>
+                                        <hr>
+                                        <p>You don't have permission to access this page.</p>
+                                        <p class="mb-0">
+                                            <strong>Your roles:</strong> 
+                                            @{
+                                                var roles = context.User.Claims
+                                                    .Where(c => c.Type == "roles")
+                                                    .Select(c => c.Value)
+                                                    .ToList();
+                                                
+                                                if (roles.Any())
+                                                {
+                                                    <span>@string.Join(", ", roles)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">No roles assigned</span>
+                                                }
+                                            }
+                                        </p>
+                                        <hr>
+                                        <p class="mb-0">
+                                            Please contact your administrator if you believe this is an error.
+                                        </p>
+                                        <div class="mt-3">
+                                            <a href="/" class="btn btn-primary">
+                                                <i class="bi bi-house-door"></i> Go to Home
+                                            </a>
+                                            <a href="authentication/logout" class="btn btn-outline-secondary ms-2">
+                                                <i class="bi bi-box-arrow-right"></i> Logout
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- User is not logged in -->
+                                <RedirectToLogin />
+                            }
+                        </NotAuthorized>
+                    </AuthorizeRouteView>
+                    <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                </Found>
+                <NotFound>
+                    <PageTitle>Not found</PageTitle>
+                    <LayoutView Layout="@typeof(MainLayout)">
+                        <div class="container mt-5">
+                            <div class="alert alert-warning">
+                                <h4 class="alert-heading">
+                                    <i class="bi bi-question-circle"></i> Page Not Found
+                                </h4>
+                                <hr>
+                                <p>Sorry, there's nothing at this address.</p>
+                                <a href="/" class="btn btn-primary">
+                                    <i class="bi bi-house-door"></i> Go to Home
+                                </a>
+                            </div>
                         </div>
-                    }
-                    else
-                    {
-                        <!-- User is not logged in -->
-                        <RedirectToLogin />
-                    }
-                </NotAuthorized>
-            </AuthorizeRouteView>
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-        </Found>
-        <NotFound>
-            <PageTitle>Not found</PageTitle>
-            <LayoutView Layout="@typeof(MainLayout)">
-                <div class="container mt-5">
-                    <div class="alert alert-warning">
-                        <h4 class="alert-heading">
-                            <i class="bi bi-question-circle"></i> Page Not Found
-                        </h4>
-                        <hr>
-                        <p>Sorry, there's nothing at this address.</p>
-                        <a href="/" class="btn btn-primary">
-                            <i class="bi bi-house-door"></i> Go to Home
-                        </a>
-                    </div>
-                </div>
-            </LayoutView>
-        </NotFound>
-    </Router>
-</CascadingAuthenticationState>
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        </CascadingAuthenticationState>
+    </ChildContent>
+    <ErrorContent>
+        <div class="container mt-5">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Unexpected Error</h4>
+                <p>Sorry, an unexpected error occurred. Please try again later.</p>
+            </div>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
