@@ -1,8 +1,148 @@
 ﻿@page "/authentication/{action}"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
+@inject ILogger<Authentication> Logger
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
-<RemoteAuthenticatorView Action="@Action" />
+<RemoteAuthenticatorView Action="@Action">
+    <LoggingIn>
+        <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Authenticating...</span>
+                </div>
+                <p class="mt-3">Signing you in...</p>
+            </div>
+        </div>
+    </LoggingIn>
+    <CompletingLoggingIn>
+        <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+            <div class="text-center">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Completing authentication...</span>
+                </div>
+                <p class="mt-3">Completing sign in...</p>
+            </div>
+        </div>
+    </CompletingLoggingIn>
+    <LogOut>
+        <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Logging out...</span>
+                </div>
+                <p class="mt-3">Signing you out...</p>
+            </div>
+        </div>
+    </LogOut>
+    <CompletingLogOut>
+        <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+            <div class="text-center">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Completing logout...</span>
+                </div>
+                <p class="mt-3">Completing sign out...</p>
+            </div>
+        </div>
+    </CompletingLogOut>
+    <LogOutSucceeded>
+        <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+            <div class="text-center">
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <h4>Successfully Signed Out</h4>
+                    <p>You have been logged out successfully.</p>
+                    <p class="mb-0"><small class="text-muted">Redirecting to home...</small></p>
+                </div>
+            </div>
+        </div>
+    </LogOutSucceeded>
+    <LogInFailed>
+        <div class="container mt-5">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Authentication Failed
+                </h4>
+                <hr>
+                <p>There was an error signing you in. Please try again.</p>
+                <a href="authentication/login" class="btn btn-primary">Retry Login</a>
+                <a href="/" class="btn btn-secondary ms-2">Return to Home</a>
+            </div>
+        </div>
+    </LogInFailed>
+    <LogOutFailed Context="errorMessage">
+        <div class="container mt-5">
+            <div class="alert alert-info">
+                <h4 class="alert-heading">
+                    <i class="bi bi-info-circle-fill"></i> Signed Out Locally
+                </h4>
+                <hr>
+                <p><strong>Your session has been cleared from this application.</strong></p>
+                <p>However, the logout process with Microsoft could not complete fully. This may happen due to network issues or configuration.</p>
+                <p class="mb-0"><small class="text-muted"><strong>What this means:</strong> You are logged out of this app, but you may still be signed in to Microsoft. To fully sign out, close your browser or visit <a href="https://login.microsoftonline.com/common/oauth2/v2.0/logout" target="_blank">Microsoft logout</a>.</small></p>
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <details class="mt-3">
+                        <summary class="text-muted" style="cursor: pointer;">Technical Details</summary>
+                        <div class="mt-2 p-3 bg-light border rounded" style="font-size: 0.875rem;">
+                            <pre class="mb-0">@errorMessage</pre>
+                        </div>
+                    </details>
+                }
+                <div class="mt-3">
+                    <a href="/" class="btn btn-primary">Return to Home</a>
+                </div>
+            </div>
+        </div>
+    </LogOutFailed>
+</RemoteAuthenticatorView>
 
 @code {
     [Parameter] public string? Action { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Logger.LogInformation("Authentication action initiated: {Action}", Action);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Action?.ToLower() == "logout")
+        {
+            Logger.LogInformation("User logout process started");
+        }
+        else if (Action?.ToLower() == "login")
+        {
+            Logger.LogInformation("User login process started");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // After logout succeeds or fails, clear all data and navigate to home
+        if (Action?.ToLower() == "logout-succeeded" || Action?.ToLower() == "logout-failed")
+        {
+            try
+            {
+                Logger.LogInformation("Logout completed, clearing all session data and navigating to home");
+                
+                // Ensure all storage is cleared
+                await JSRuntime.InvokeVoidAsync("sessionStorage.clear");
+                await JSRuntime.InvokeVoidAsync("localStorage.clear");
+                
+                // Show message briefly before navigating
+                await Task.Delay(1500);
+                
+                // Navigate to home with force reload to completely reset the application state
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error during logout cleanup, attempting navigation");
+                // Fallback to navigation if JS fails
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+        }
+    }
 }

@@ -60,7 +60,6 @@ public class CustomUserFactory : AccountClaimsPrincipalFactory<RemoteUserAccount
             // Also check AdditionalProperties for roles
             if (account.AdditionalProperties.TryGetValue("roles", out var rolesObj))
             {
-                Console.WriteLine("=== Roles from AdditionalProperties ===");
                 if (rolesObj is JsonElement rolesElement)
                 {
                     if (rolesElement.ValueKind == JsonValueKind.Array)

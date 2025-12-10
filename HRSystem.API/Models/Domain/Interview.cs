@@ -12,6 +12,8 @@ namespace HRSystem.API.Models.Domain
 
         [Required]
         public Guid CandidateId { get; set; }
+        
+        [ForeignKey(nameof(CandidateId))]
         public Candidate Candidate { get; set; } = null!;
 
         [Required]

@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
-using HRSystem.API.Services;
 using System.Text.Json.Serialization;
 using Azure.Storage.Blobs;
 
@@ -43,7 +42,6 @@ if (!string.IsNullOrEmpty(azureBlobConnectionString))
 builder.Services.AddScoped<IUserRepository, AzureUserRepository>();
 builder.Services.AddScoped<ICandidateRepository, SQLCandidateRepository>();
 builder.Services.AddScoped<IInterviewRepository, SQLInterviewRepository>();
-builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
 builder.Services.AddScoped<IRecordingStorageService, LocalRecordingStorageService>();
 
@@ -85,14 +83,17 @@ builder.Services.AddCors(options =>
                             "https://hrsystem-azfkepg9eeadf7bx.southeastasia-01.azurewebsites.net",
                             "https://localhost:7208"
                         )
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
+              .AllowCredentials()
+              .WithHeaders("Content-Type", "Authorization")
+              .WithMethods("GET", "POST", "PUT", "DELETE"));
 });
 
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Add error handling and request logging middleware
+app.UseMiddleware<HRSystem.API.Middleware.ErrorHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -123,7 +124,5 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
-
-// app.UseMiddleware<HRSystem.API.Middleware.ErrorHandlingMiddleware>();
 
 app.Run();

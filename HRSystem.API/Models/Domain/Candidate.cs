@@ -11,6 +11,7 @@ namespace HRSystem.API.Models.Domain
         [NotMapped]
         public IFormFile Resume { get; set; } = null!;
         public string ResumePath { get; set; } = string.Empty;
-        public ICollection<Interview> Interviews { get; set; } = null!;
+        
+        public ICollection<Interview>? Interviews { get; set; }
     }
 }

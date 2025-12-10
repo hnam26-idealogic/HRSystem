@@ -1,0 +1,50 @@
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
+@inject ILogger<LogoutButton> Logger
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<AuthorizeView>
+    <Authorized>
+        <button class="@ButtonClass" @onclick="BeginSignOut">
+            <i class="bi bi-box-arrow-right"></i> @ButtonText
+        </button>
+    </Authorized>
+    <NotAuthorized>
+        <button class="@ButtonClass" disabled>
+            <i class="bi bi-box-arrow-right"></i> @ButtonText
+        </button>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public string ButtonClass { get; set; } = "btn btn-outline-secondary";
+
+    [Parameter]
+    public string ButtonText { get; set; } = "Logout";
+
+    private async Task BeginSignOut()
+    {
+        try
+        {
+            Logger.LogInformation("User clicked logout - clearing all session data");
+            
+            // Clear session storage and local storage
+            await JSRuntime.InvokeVoidAsync("sessionStorage.clear");
+            await JSRuntime.InvokeVoidAsync("localStorage.clear");
+            
+            Logger.LogInformation("Session and local storage cleared, redirecting to Microsoft logout");
+            
+            // Navigate to logout with MSAL
+            Navigation.NavigateToLogout("authentication/logout");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during logout process");
+            // Still attempt to logout even if storage clear fails
+            Navigation.NavigateToLogout("authentication/logout");
+        }
+    }
+}

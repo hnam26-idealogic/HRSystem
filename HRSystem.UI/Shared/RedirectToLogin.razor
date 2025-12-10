@@ -1,0 +1,10 @@
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+@inject ILogger<RedirectToLogin> Logger
+@code {
+    protected override void OnInitialized()
+    {
+        Logger.LogInformation("User not authenticated - redirecting to login");
+        Navigation.NavigateToLogin("authentication/login");
+    }
+}

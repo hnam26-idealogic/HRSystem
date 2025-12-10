@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using HRSystem.UI.DTOs;
+using Microsoft.Extensions.Logging;
 
 namespace HRSystem.UI.Services;
 
 public class AuthService : IAuthService
 {
     private readonly AuthenticationStateProvider _authenticationStateProvider;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AuthenticationStateProvider authenticationStateProvider)
+    public AuthService(AuthenticationStateProvider authenticationStateProvider, ILogger<AuthService> logger)
     {
         _authenticationStateProvider = authenticationStateProvider;
+        _logger = logger;
     }
 
     private async Task<ClaimsPrincipal?> GetCurrentUserAsync()
@@ -21,21 +24,35 @@ public class AuthService : IAuthService
 
     public async Task<Guid?> GetCurrentUserIdAsync()
     {
-        var user = await GetCurrentUserAsync();
-        if (user == null) return null;
-
-        // Try different claim types for user ID
-        var userIdClaim = user.FindFirst("oid")                      // Azure AD Object ID (most reliable)
-                       ?? user.FindFirst(ClaimTypes.NameIdentifier)  // Standard claim
-                       ?? user.FindFirst("sub")                      // OIDC standard
-                       ?? user.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier");
-
-        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+        try
         {
-            return userId;
-        }
+            var user = await GetCurrentUserAsync();
+            if (user == null)
+            {
+                _logger.LogDebug("No authenticated user found");
+                return null;
+            }
 
-        return null;
+            // Try different claim types for user ID
+            var userIdClaim = user.FindFirst("oid")                      // Azure AD Object ID (most reliable)
+                           ?? user.FindFirst(ClaimTypes.NameIdentifier)  // Standard claim
+                           ?? user.FindFirst("sub")                      // OIDC standard
+                           ?? user.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier");
+
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                _logger.LogDebug("Retrieved current user ID: {UserId}", userId);
+                return userId;
+            }
+
+            _logger.LogWarning("Could not extract user ID from claims");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting current user ID");
+            throw;
+        }
     }
 
     public async Task<string?> GetCurrentUserEmailAsync()
@@ -109,8 +126,18 @@ public class AuthService : IAuthService
 
     public async Task<bool> IsAuthenticatedAsync()
     {
-        var user = await GetCurrentUserAsync();
-        return user != null;
+        try
+        {
+            var user = await GetCurrentUserAsync();
+            var isAuthenticated = user != null;
+            _logger.LogDebug("User authentication status: {IsAuthenticated}", isAuthenticated);
+            return isAuthenticated;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking authentication status");
+            throw;
+        }
     }
 
 
