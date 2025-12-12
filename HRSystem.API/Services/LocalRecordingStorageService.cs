@@ -8,16 +8,16 @@ namespace HRSystem.API.Services
 {
     public class LocalRecordingStorageService : IRecordingStorageService
     {
-        private readonly IWebHostEnvironment webHostEnvironment;
-        private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<LocalRecordingStorageService> _logger;
 
         public LocalRecordingStorageService(IWebHostEnvironment webHostEnvironment,
             IHttpContextAccessor httpContextAccessor,
             ILogger<LocalRecordingStorageService> logger)
         {
-            this.webHostEnvironment = webHostEnvironment;
-            this.httpContextAccessor = httpContextAccessor;
+            _webHostEnvironment = webHostEnvironment;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
@@ -43,7 +43,7 @@ namespace HRSystem.API.Services
                     throw new InvalidOperationException("Only audio/video files are allowed for recording upload.");
                 }
 
-                var uploadsFolder = Path.Combine(webHostEnvironment.ContentRootPath, "Recordings");
+                var uploadsFolder = Path.Combine(_webHostEnvironment.ContentRootPath, "Recordings");
                 Directory.CreateDirectory(uploadsFolder);
                 _logger.LogDebug("Recording upload folder path: {FolderPath}", uploadsFolder);
 
@@ -64,9 +64,9 @@ namespace HRSystem.API.Services
                     recordingBytes = memoryStream.ToArray();
                 }
 
-                var urlFilePath = $"{httpContextAccessor.HttpContext.Request.Scheme}://" +
-                    $"{httpContextAccessor.HttpContext.Request.Host}" +
-                    $"{httpContextAccessor.HttpContext.Request.PathBase}/Recordings/{fileName}";
+                var urlFilePath = $"{_httpContextAccessor.HttpContext.Request.Scheme}://" +
+                    $"{_httpContextAccessor.HttpContext.Request.Host}" +
+                    $"{_httpContextAccessor.HttpContext.Request.PathBase}/Recordings/{fileName}";
 
                 _logger.LogInformation("Recording uploaded successfully. FileName: {FileName}, URL: {Url}, BytesCount: {Count}",
                     fileName, urlFilePath, recordingBytes.Length);

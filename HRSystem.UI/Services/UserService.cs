@@ -12,14 +12,14 @@ namespace HRSystem.UI.Services
 {
     public class UserService : IUserService
     {
-        private readonly HttpClient httpClient;
-        private readonly ITokenService tokenService;
+        private readonly HttpClient _httpClient;
+        private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
 
         public UserService(HttpClient httpClient, ITokenService tokenService, ILogger<UserService> logger)
         {
-            this.httpClient = httpClient;
-            this.tokenService = tokenService;
+            _httpClient = httpClient;
+            _tokenService = tokenService;
             _logger = logger;
         }
 
@@ -28,8 +28,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Fetching users from API. Page: {Page}, Size: {Size}", page, size);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.GetAsync($"/api/Users?p={page}&size={size}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.GetAsync($"/api/Users?p={page}&size={size}");
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to fetch users. Status: {StatusCode}", response.StatusCode);
@@ -51,8 +51,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Fetching user from API: {UserId}", id);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var user = await httpClient.GetFromJsonAsync<UserDto>($"/api/Users/{id}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var user = await _httpClient.GetFromJsonAsync<UserDto>($"/api/Users/{id}");
                 _logger.LogInformation("Successfully retrieved user: {UserId}", id);
                 return user;
             }
@@ -68,8 +68,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Creating user. Email: {Email}", dto.Email);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.PostAsJsonAsync("/api/Users", dto);
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.PostAsJsonAsync("/api/Users", dto);
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully created user: {Email}", dto.Email);
@@ -92,8 +92,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Updating user: {UserId}", id);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.PutAsJsonAsync($"/api/Users/{id}", dto);
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.PutAsJsonAsync($"/api/Users/{id}", dto);
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully updated user: {UserId}", id);
@@ -116,8 +116,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Deleting user: {UserId}", id);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.DeleteAsync($"/api/Users/{id}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.DeleteAsync($"/api/Users/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully deleted user: {UserId}", id);

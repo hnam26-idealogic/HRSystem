@@ -39,6 +39,10 @@ if (!string.IsNullOrEmpty(azureBlobConnectionString))
     builder.Services.AddSingleton(x => new BlobServiceClient(azureBlobConnectionString));
 }
 
+// Register Azure Search and Resume Extraction services
+builder.Services.AddScoped<IAzureSearchService, AzureSearchService>();
+builder.Services.AddScoped<IResumeExtractionService, ResumeExtractionService>();
+
 builder.Services.AddScoped<IUserRepository, AzureUserRepository>();
 builder.Services.AddScoped<ICandidateRepository, SQLCandidateRepository>();
 builder.Services.AddScoped<IInterviewRepository, SQLInterviewRepository>();
@@ -124,5 +128,19 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
+
+// Initialize Azure Search Index on startup
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Initializing Azure AI Search index...");
+    
+    var indexInitializer = new HRSystem.API.Services.SearchIndexInitializer(
+        scope.ServiceProvider.GetRequiredService<IConfiguration>(),
+        scope.ServiceProvider.GetRequiredService<ILogger<HRSystem.API.Services.SearchIndexInitializer>>()
+    );
+    
+    await indexInitializer.InitializeIndexAsync();
+}
 
 app.Run();

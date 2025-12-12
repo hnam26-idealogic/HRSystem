@@ -16,13 +16,13 @@ namespace HRSystem.API.Controllers
     public class InterviewsController : ControllerBase
     {
         private readonly ILogger<InterviewsController> _logger;
-        private readonly IInterviewRepository interviewRepository;
-        private readonly ICandidateRepository candidateRepository;
-        private readonly IUserRepository userRepository;
-        private readonly IMapper mapper;
-        private readonly IRecordingStorageService recordingStorageService;
-        private readonly List<Candidate> candidates;
-        private readonly List<User> users;
+        private readonly IInterviewRepository _interviewRepository;
+        private readonly ICandidateRepository _candidateRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
+        private readonly IRecordingStorageService _recordingStorageService;
+        private readonly List<Candidate> _candidates;
+        private readonly List<User> _users;
 
         public InterviewsController(
             ILogger<InterviewsController> logger,
@@ -33,17 +33,17 @@ namespace HRSystem.API.Controllers
             IRecordingStorageService recordingStorageService)
         {
             _logger = logger;
-            this.interviewRepository = interviewRepository;
-            this.candidateRepository = candidateRepository;
-            this.userRepository = userRepository;
-            this.mapper = mapper;
-            this.recordingStorageService = recordingStorageService;
+            _interviewRepository = interviewRepository;
+            _candidateRepository = candidateRepository;
+            _userRepository = userRepository;
+            _mapper = mapper;
+            _recordingStorageService = recordingStorageService;
 
             _logger.LogInformation("Initializing InterviewsController and loading reference data");
             // Fetch all candidates and users once for name mapping
-            candidates = candidateRepository.GetAllAsync().Result.Items.ToList();
-            users = userRepository.GetAllAsync().Result.Items.ToList();
-            _logger.LogDebug("Loaded {CandidateCount} candidates and {UserCount} users for reference", candidates.Count, users.Count);
+            _candidates = candidateRepository.GetAllAsync().Result.Items.ToList();
+            _users = userRepository.GetAllAsync().Result.Items.ToList();
+            _logger.LogDebug("Loaded {CandidateCount} candidates and {UserCount} users for reference", _candidates.Count, _users.Count);
         }
 
         [HttpGet]
@@ -53,13 +53,13 @@ namespace HRSystem.API.Controllers
             try
             {
                 _logger.LogInformation("Retrieving all interviews. Page: {Page}, Size: {Size}", p, size);
-                var (pagedInterviews, totalCount) = await interviewRepository.GetAllAsync(p, size);
-                var interviewDtos = mapper.Map<List<InterviewDto>>(pagedInterviews);
+                var (pagedInterviews, totalCount) = await _interviewRepository.GetAllAsync(p, size);
+                var interviewDtos = _mapper.Map<List<InterviewDto>>(pagedInterviews);
                 foreach (var dto in interviewDtos)
                 {
-                    dto.CandidateName = candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
-                    dto.InterviewerName = users.FirstOrDefault(u => u.Email == dto.InterviewerEmail)?.Fullname ?? "";
-                    dto.HrName = users.FirstOrDefault(u => u.Email == dto.HrEmail)?.Fullname ?? "";
+                    dto.CandidateName = _candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
+                    dto.InterviewerName = _users.FirstOrDefault(u => u.Email == dto.InterviewerEmail)?.Fullname ?? "";
+                    dto.HrName = _users.FirstOrDefault(u => u.Email == dto.HrEmail)?.Fullname ?? "";
                 }
                 _logger.LogInformation("Successfully retrieved {Count} interviews out of {TotalCount}", interviewDtos.Count, totalCount);
                 return Ok(new
@@ -84,16 +84,16 @@ namespace HRSystem.API.Controllers
             try
             {
                 _logger.LogInformation("Retrieving interview: {InterviewId}", id);
-                var interview = await interviewRepository.GetByIdAsync(id);
+                var interview = await _interviewRepository.GetByIdAsync(id);
                 if (interview == null)
                 {
                     _logger.LogWarning("Interview not found: {InterviewId}", id);
                     return NotFound();
                 }
-                var dto = mapper.Map<InterviewDto>(interview);
-                dto.CandidateName = candidates.FirstOrDefault(c => c.Id == interview.CandidateId)?.Fullname ?? "";
-                dto.InterviewerName = users.FirstOrDefault(u => u.Email == interview.InterviewerEmail)?.Fullname ?? "";
-                dto.HrName = users.FirstOrDefault(u => u.Email == interview.HrEmail)?.Fullname ?? "";
+                var dto = _mapper.Map<InterviewDto>(interview);
+                dto.CandidateName = _candidates.FirstOrDefault(c => c.Id == interview.CandidateId)?.Fullname ?? "";
+                dto.InterviewerName = _users.FirstOrDefault(u => u.Email == interview.InterviewerEmail)?.Fullname ?? "";
+                dto.HrName = _users.FirstOrDefault(u => u.Email == interview.HrEmail)?.Fullname ?? "";
                 _logger.LogInformation("Successfully retrieved interview: {InterviewId}, Candidate: {CandidateId}", id, interview.CandidateId);
                 return Ok(dto);
             }
@@ -114,19 +114,19 @@ namespace HRSystem.API.Controllers
                 _logger.LogInformation("Creating new interview. Candidate: {CandidateId}, Job: {Job}, HasRecording: {HasRecording}",
                     addInterviewRequestDto.CandidateId, addInterviewRequestDto.Job, addInterviewRequestDto.Recording != null);
                 
-                var interviewEntity = mapper.Map<Interview>(addInterviewRequestDto);
+                var interviewEntity = _mapper.Map<Interview>(addInterviewRequestDto);
 
                 if (addInterviewRequestDto.Recording != null)
                 {
                     _logger.LogInformation("Uploading recording file: {FileName}, Size: {Size} bytes",
                         addInterviewRequestDto.Recording.FileName, addInterviewRequestDto.Recording.Length);
-                    var (recordingPath, _) = await recordingStorageService.UploadAsync(addInterviewRequestDto.Recording);
+                    var (recordingPath, _) = await _recordingStorageService.UploadAsync(addInterviewRequestDto.Recording);
                     interviewEntity.Recording = recordingPath;
                     _logger.LogInformation("Recording uploaded successfully: {RecordingPath}", recordingPath);
                 }
 
-                var createdInterview = await interviewRepository.AddAsync(interviewEntity);
-                var createdInterviewDto = mapper.Map<InterviewDto>(createdInterview);
+                var createdInterview = await _interviewRepository.AddAsync(interviewEntity);
+                var createdInterviewDto = _mapper.Map<InterviewDto>(createdInterview);
                 _logger.LogInformation("Interview created successfully: {InterviewId}, Candidate: {CandidateId}",
                     createdInterviewDto.Id, createdInterviewDto.CandidateId);
                 return CreatedAtAction(nameof(GetById), new { id = createdInterviewDto.Id }, createdInterviewDto);
@@ -149,18 +149,18 @@ namespace HRSystem.API.Controllers
                 _logger.LogInformation("Updating interview: {InterviewId}, HasRecording: {HasRecording}",
                     id, updateInterviewRequestDto.Recording != null);
                 
-                var interviewEntity = mapper.Map<Interview>(updateInterviewRequestDto);
+                var interviewEntity = _mapper.Map<Interview>(updateInterviewRequestDto);
 
                 if (updateInterviewRequestDto.Recording != null)
                 {
                     _logger.LogInformation("Uploading new recording for interview: {InterviewId}, FileName: {FileName}",
                         id, updateInterviewRequestDto.Recording.FileName);
-                    var (recordingPath, _) = await recordingStorageService.UploadAsync(updateInterviewRequestDto.Recording);
+                    var (recordingPath, _) = await _recordingStorageService.UploadAsync(updateInterviewRequestDto.Recording);
                     interviewEntity.Recording = recordingPath;
                 }
 
-                var updatedInterview = await interviewRepository.UpdateAsync(id, interviewEntity);
-                var updatedInterviewDto = mapper.Map<InterviewDto>(updatedInterview);
+                var updatedInterview = await _interviewRepository.UpdateAsync(id, interviewEntity);
+                var updatedInterviewDto = _mapper.Map<InterviewDto>(updatedInterview);
                 _logger.LogInformation("Interview updated successfully: {InterviewId}", id);
                 return Ok(updatedInterviewDto);
             }
@@ -183,7 +183,7 @@ namespace HRSystem.API.Controllers
             try
             {
                 _logger.LogInformation("Deleting interview: {InterviewId}", id);
-                var deleted = await interviewRepository.DeleteAsync(id);
+                var deleted = await _interviewRepository.DeleteAsync(id);
                 if (!deleted)
                 {
                     _logger.LogWarning("Interview not found for deletion: {InterviewId}", id);
@@ -206,15 +206,15 @@ namespace HRSystem.API.Controllers
             try
             {
                 _logger.LogInformation("Searching interviews. Query: '{Query}', Page: {Page}, Size: {Size}", query, p, size);
-                var (interviews, totalCount) = await interviewRepository.SearchAsync(query, p, size);
-                var interviewDtos = mapper.Map<List<InterviewDto>>(interviews);
+                var (interviews, totalCount) = await _interviewRepository.SearchAsync(query, p, size);
+                var interviewDtos = _mapper.Map<List<InterviewDto>>(interviews);
                 
                 // Map names from Graph API users
                 foreach (var dto in interviewDtos)
                 {
-                    dto.CandidateName = candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
-                    dto.InterviewerName = users.FirstOrDefault(u => u.Email == dto.InterviewerEmail)?.Fullname ?? "";
-                    dto.HrName = users.FirstOrDefault(u => u.Email == dto.HrEmail)?.Fullname ?? "";
+                    dto.CandidateName = _candidates.FirstOrDefault(c => c.Id == dto.CandidateId)?.Fullname ?? "";
+                    dto.InterviewerName = _users.FirstOrDefault(u => u.Email == dto.InterviewerEmail)?.Fullname ?? "";
+                    dto.HrName = _users.FirstOrDefault(u => u.Email == dto.HrEmail)?.Fullname ?? "";
                 }
                 
                 // Additionally filter by user names if they match the query (client-side filtering)

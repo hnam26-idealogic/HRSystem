@@ -7,9 +7,9 @@ namespace HRSystem.UI.Services
     {
         Task<bool> AddAsync(AddInterviewRequestDto dto, IBrowserFile recordingFile);
         Task<bool> DeleteAsync(Guid id);
-        Task<List<InterviewDto>> GetAllAsync(int page = 1, int size = 10);
+        Task<PagedResult<InterviewDto>> GetAllAsync(int page = 1, int size = 10);
         Task<InterviewDto> GetByIdAsync(Guid id);
-        Task<List<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10);
+        Task<PagedResult<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10);
         Task<bool> UpdateAsync(Guid id, UpdateInterviewRequestDto dto, IBrowserFile recordingFile);
     }
 }

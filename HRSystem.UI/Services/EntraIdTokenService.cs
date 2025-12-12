@@ -7,16 +7,16 @@ namespace HRSystem.UI.Services
 {
     public class EntraIdTokenService : ITokenService
     {
-        private readonly IAccessTokenProvider tokenProvider;
+        private readonly IAccessTokenProvider _tokenProvider;
 
         public EntraIdTokenService(IAccessTokenProvider tokenProvider)
         {
-            this.tokenProvider = tokenProvider;
+            _tokenProvider = tokenProvider;
         }
 
         public async Task ApplyTokenAsync(HttpClient httpClient)
         {
-            var tokenResult = await tokenProvider.RequestAccessToken();
+            var tokenResult = await _tokenProvider.RequestAccessToken();
             if (tokenResult.TryGetToken(out var token))
             {
                 httpClient.DefaultRequestHeaders.Authorization =

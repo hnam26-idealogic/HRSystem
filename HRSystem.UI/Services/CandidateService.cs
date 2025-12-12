@@ -10,32 +10,32 @@ namespace HRSystem.UI.Services
 {
     public class CandidateService : ICandidateService
     {
-        private readonly HttpClient httpClient;
-        private readonly ITokenService tokenService;
+        private readonly HttpClient _httpClient;
+        private readonly ITokenService _tokenService;
         private readonly ILogger<CandidateService> _logger;
 
         public CandidateService(HttpClient httpClient, ITokenService tokenService, ILogger<CandidateService> logger)
         {
-            this.httpClient = httpClient;
-            this.tokenService = tokenService;
+            _httpClient = httpClient;
+            _tokenService = tokenService;
             _logger = logger;
         }
 
-        public async Task<List<CandidateDto>> GetAllAsync(int page = 1, int size = 10)
+        public async Task<PagedResult<CandidateDto>> GetAllAsync(int page = 1, int size = 10)
         {
             try
             {
                 _logger.LogInformation("Fetching candidates from API. Page: {Page}, Size: {Size}", page, size);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.GetAsync($"/api/Candidates?p={page}&size={size}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.GetAsync($"/api/Candidates?p={page}&size={size}");
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to fetch candidates. Status: {StatusCode}", response.StatusCode);
-                    return new List<CandidateDto>();
+                    return new PagedResult<CandidateDto>();
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
                 _logger.LogInformation("Successfully retrieved {Count} candidates", result?.Items?.Count ?? 0);
-                return result?.Items ?? new List<CandidateDto>();
+                return result ?? new PagedResult<CandidateDto>();
             }
             catch (Exception ex)
             {
@@ -49,8 +49,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Fetching candidate from API: {CandidateId}", id);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var candidate = await httpClient.GetFromJsonAsync<CandidateDto>($"/api/Candidates/{id}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var candidate = await _httpClient.GetFromJsonAsync<CandidateDto>($"/api/Candidates/{id}");
                 _logger.LogInformation("Successfully retrieved candidate: {CandidateId}", id);
                 return candidate;
             }
@@ -66,7 +66,7 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Creating candidate. Email: {Email}, HasResume: {HasResume}", dto.Email, resumeFile != null);
-                await tokenService.ApplyTokenAsync(httpClient);
+                await _tokenService.ApplyTokenAsync(_httpClient);
                 var content = new MultipartFormDataContent();
                 content.Add(new StringContent(dto.Fullname), "Fullname");
                 content.Add(new StringContent(dto.Email), "Email");
@@ -78,7 +78,7 @@ namespace HRSystem.UI.Services
                     content.Add(new StreamContent(stream), "Resume", resumeFile.Name);
                 }
 
-                var response = await httpClient.PostAsync("/api/Candidates", content);
+                var response = await _httpClient.PostAsync("/api/Candidates", content);
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully created candidate: {Email}", dto.Email);
@@ -101,7 +101,7 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Updating candidate: {CandidateId}, HasNewResume: {HasResume}", id, resumeFile != null);
-                await tokenService.ApplyTokenAsync(httpClient);
+                await _tokenService.ApplyTokenAsync(_httpClient);
                 var content = new MultipartFormDataContent();
                 content.Add(new StringContent(dto.Fullname), "Fullname");
                 content.Add(new StringContent(dto.Phone), "Phone");
@@ -112,7 +112,7 @@ namespace HRSystem.UI.Services
                     content.Add(new StreamContent(stream), "Resume", resumeFile.Name);
                 }
 
-                var response = await httpClient.PutAsync($"/api/Candidates/{id}", content);
+                var response = await _httpClient.PutAsync($"/api/Candidates/{id}", content);
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully updated candidate: {CandidateId}", id);
@@ -135,8 +135,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Deleting candidate: {CandidateId}", id);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.DeleteAsync($"/api/Candidates/{id}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.DeleteAsync($"/api/Candidates/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully deleted candidate: {CandidateId}", id);
@@ -154,21 +154,21 @@ namespace HRSystem.UI.Services
             }
         }
 
-        public async Task<List<CandidateDto>> SearchAsync(string query, int page = 1, int size = 10)
+        public async Task<PagedResult<CandidateDto>> SearchAsync(string query, int page = 1, int size = 10)
         {
             try
             {
                 _logger.LogInformation("Searching candidates. Query: '{Query}', Page: {Page}, Size: {Size}", query, page, size);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.GetAsync($"/api/Candidates/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.GetAsync($"/api/Candidates/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to search candidates. Status: {StatusCode}", response.StatusCode);
-                    return new List<CandidateDto>();
+                    return new PagedResult<CandidateDto>();
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
                 _logger.LogInformation("Search completed. Found {Count} candidates", result?.Items?.Count ?? 0);
-                return result?.Items ?? new List<CandidateDto>();
+                return result ?? new PagedResult<CandidateDto>();
             }
             catch (Exception ex)
             {
@@ -182,8 +182,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Fetching resume URL for candidate: {CandidateId}", candidateId);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.GetAsync($"/api/Candidates/{candidateId}/resume-url");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.GetAsync($"/api/Candidates/{candidateId}/resume-url");
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to get resume URL. CandidateId: {CandidateId}, Status: {StatusCode}", candidateId, response.StatusCode);

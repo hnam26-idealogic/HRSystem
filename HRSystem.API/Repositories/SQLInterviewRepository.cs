@@ -7,12 +7,12 @@ namespace HRSystem.API.Repositories
 {
    public class SQLInterviewRepository : IInterviewRepository
    {
-       private readonly HRSystemDBContext dbContext;
+       private readonly HRSystemDBContext _dbContext;
        private readonly ILogger<SQLInterviewRepository> _logger;
 
        public SQLInterviewRepository(HRSystemDBContext dbContext, ILogger<SQLInterviewRepository> logger)
        {
-           this.dbContext = dbContext;
+           _dbContext = dbContext;
            _logger = logger;
        }
 
@@ -21,7 +21,7 @@ namespace HRSystem.API.Repositories
            try
            {
                _logger.LogInformation("Retrieving interviews from database. Page: {Page}, Size: {Size}", page, size);
-               var query = dbContext.Interviews;
+               var query = _dbContext.Interviews;
                var totalCount = await query.CountAsync();
                var items = await query
                    .OrderBy(i => i.InterviewedAt)
@@ -43,7 +43,7 @@ namespace HRSystem.API.Repositories
            try
            {
                _logger.LogInformation("Retrieving interview from database: {InterviewId}", id);
-               var interview = await dbContext.Interviews.FindAsync(id);
+               var interview = await _dbContext.Interviews.FindAsync(id);
                if (interview == null)
                {
                    _logger.LogWarning("Interview not found in database: {InterviewId}", id);
@@ -67,8 +67,8 @@ namespace HRSystem.API.Repositories
            {
                _logger.LogInformation("Adding new interview to database. Candidate: {CandidateId}, Job: {Job}",
                    interview.CandidateId, interview.Job);
-               await dbContext.Interviews.AddAsync(interview);
-               await dbContext.SaveChangesAsync();
+               await _dbContext.Interviews.AddAsync(interview);
+               await _dbContext.SaveChangesAsync();
                _logger.LogInformation("Interview added successfully. InterviewId: {InterviewId}, Candidate: {CandidateId}",
                    interview.Id, interview.CandidateId);
                return interview;
@@ -86,7 +86,7 @@ namespace HRSystem.API.Repositories
            try
            {
                _logger.LogInformation("Updating interview in database: {InterviewId}", id);
-               var existingInterview = await dbContext.Interviews.FindAsync(id);
+               var existingInterview = await _dbContext.Interviews.FindAsync(id);
                if (existingInterview == null)
                {
                    _logger.LogWarning("Interview not found for update: {InterviewId}", id);
@@ -102,8 +102,8 @@ namespace HRSystem.API.Repositories
                existingInterview.Recommend = interview.Recommend;
                existingInterview.Status = interview.Status;
 
-               dbContext.Interviews.Update(existingInterview);
-               await dbContext.SaveChangesAsync();
+               _dbContext.Interviews.Update(existingInterview);
+               await _dbContext.SaveChangesAsync();
                _logger.LogInformation("Interview updated successfully: {InterviewId}, Status: {Status}",
                    id, existingInterview.Status);
                return existingInterview;
@@ -124,15 +124,15 @@ namespace HRSystem.API.Repositories
            try
            {
                _logger.LogInformation("Deleting interview from database: {InterviewId}", id);
-               var interview = await dbContext.Interviews.FindAsync(id);
+               var interview = await _dbContext.Interviews.FindAsync(id);
                if (interview == null)
                {
                    _logger.LogWarning("Interview not found for deletion: {InterviewId}", id);
                    return false;
                }
 
-               dbContext.Interviews.Remove(interview);
-               await dbContext.SaveChangesAsync();
+               _dbContext.Interviews.Remove(interview);
+               await _dbContext.SaveChangesAsync();
                _logger.LogInformation("Interview deleted successfully: {InterviewId}", id);
                return true;
            }
@@ -159,9 +159,9 @@ namespace HRSystem.API.Repositories
 
                // Search only by candidate name/email, job, status, and interviewer/HR emails
                // User names will be matched in the controller after fetching from Graph API
-               var interviewsQuery = dbContext.Interviews
+               var interviewsQuery = _dbContext.Interviews
                    .Where(i =>
-                       dbContext.Candidates.Any(c => c.Id == i.CandidateId && 
+                       _dbContext.Candidates.Any(c => c.Id == i.CandidateId && 
                            (c.Fullname.ToLower().Contains(normalizedQuery) || 
                             c.Email.ToLower().Contains(normalizedQuery))) ||
                        i.Job.ToLower().Contains(normalizedQuery) ||

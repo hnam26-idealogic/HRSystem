@@ -1,5 +1,6 @@
 ﻿using HRSystem.API.Data;
 using HRSystem.API.Models.Domain;
+using HRSystem.API.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -7,13 +8,18 @@ namespace HRSystem.API.Repositories
 {
     public class SQLCandidateRepository : ICandidateRepository
     {
-        private readonly HRSystemDBContext dbContext;
+        private readonly HRSystemDBContext _dbContext;
         private readonly ILogger<SQLCandidateRepository> _logger;
+        private readonly IAzureSearchService _azureSearchService;
 
-        public SQLCandidateRepository(HRSystemDBContext dbContext, ILogger<SQLCandidateRepository> logger)
+        public SQLCandidateRepository(
+            HRSystemDBContext dbContext, 
+            ILogger<SQLCandidateRepository> logger,
+            IAzureSearchService azureSearchService)
         {
-            this.dbContext = dbContext;
+            _dbContext = dbContext;
             _logger = logger;
+            _azureSearchService = azureSearchService;
         }
 
         public async Task<(IEnumerable<Candidate> Items, int TotalCount)> GetAllAsync(int page = 1, int size = 10)
@@ -21,7 +27,7 @@ namespace HRSystem.API.Repositories
             try
             {
                 _logger.LogInformation("Retrieving candidates from database. Page: {Page}, Size: {Size}", page, size);
-                var query = dbContext.Candidates.Where(c => c.DeletedAt == null);
+                var query = _dbContext.Candidates.Where(c => c.DeletedAt == null);
                 var totalCount = await query.CountAsync();
                 var items = await query
                     .OrderBy(c => c.Fullname)
@@ -43,7 +49,7 @@ namespace HRSystem.API.Repositories
             try
             {
                 _logger.LogInformation("Retrieving candidate from database: {CandidateId}", id);
-                var candidate = await dbContext.Candidates
+                var candidate = await _dbContext.Candidates
                     .Where(c => c.DeletedAt == null && c.Id == id)
                     .FirstOrDefaultAsync();
                 if (candidate == null)
@@ -68,7 +74,7 @@ namespace HRSystem.API.Repositories
             try
             {
                 _logger.LogInformation("Retrieving candidate by email: {Email}", email);
-                var candidate = await dbContext.Candidates
+                var candidate = await _dbContext.Candidates
                     .Where(c => c.DeletedAt == null && c.Email == email)
                     .FirstOrDefaultAsync();
                 if (candidate == null)
@@ -95,16 +101,21 @@ namespace HRSystem.API.Repositories
                 _logger.LogInformation("Adding new candidate to database. Email: {Email}, Name: {Name}",
                     candidate.Email, candidate.Fullname);
 
-                if (await dbContext.Candidates.AnyAsync(c => c.Email == candidate.Email))
+                if (await _dbContext.Candidates.AnyAsync(c => c.Email == candidate.Email))
                 {
                     _logger.LogWarning("Duplicate candidate email detected: {Email}", candidate.Email);
                     throw new InvalidOperationException("A candidate with this email already exists.");
                 }
 
-                await dbContext.Candidates.AddAsync(candidate);
-                await dbContext.SaveChangesAsync();
+                await _dbContext.Candidates.AddAsync(candidate);
+                await _dbContext.SaveChangesAsync();
+                
                 _logger.LogInformation("Candidate added successfully. CandidateId: {CandidateId}, Email: {Email}",
                     candidate.Id, candidate.Email);
+
+                // Index candidate in Azure Search
+                await _azureSearchService.IndexCandidateAsync(candidate);
+                
                 return candidate;
             }
             catch (InvalidOperationException)
@@ -123,7 +134,7 @@ namespace HRSystem.API.Repositories
             try
             {
                 _logger.LogInformation("Updating candidate in database: {CandidateId}", id);
-                var existingCandidate = await dbContext.Candidates.FindAsync(id);
+                var existingCandidate = await _dbContext.Candidates.FindAsync(id);
                 if (existingCandidate == null)
                 {
                     _logger.LogWarning("Candidate not found for update: {CandidateId}", id);
@@ -134,10 +145,15 @@ namespace HRSystem.API.Repositories
                 existingCandidate.Phone = candidate.Phone;
                 existingCandidate.ResumePath = candidate.ResumePath;
 
-                dbContext.Candidates.Update(existingCandidate);
-                await dbContext.SaveChangesAsync();
+                _dbContext.Candidates.Update(existingCandidate);
+                await _dbContext.SaveChangesAsync();
+                
                 _logger.LogInformation("Candidate updated successfully: {CandidateId}, Email: {Email}",
                     id, existingCandidate.Email);
+
+                // Update candidate in Azure Search index
+                await _azureSearchService.UpdateCandidateIndexAsync(existingCandidate);
+                
                 return existingCandidate;
             }
             catch (KeyNotFoundException)
@@ -156,7 +172,7 @@ namespace HRSystem.API.Repositories
             try
             {
                 _logger.LogInformation("Soft deleting candidate: {CandidateId}", id);
-                var candidate = await dbContext.Candidates.FindAsync(id);
+                var candidate = await _dbContext.Candidates.FindAsync(id);
                 if (candidate == null)
                 {
                     _logger.LogWarning("Candidate not found for deletion: {CandidateId}", id);
@@ -164,10 +180,15 @@ namespace HRSystem.API.Repositories
                 }
 
                 candidate.DeletedAt = DateTime.UtcNow;
-                dbContext.Candidates.Update(candidate);
-                await dbContext.SaveChangesAsync();
+                _dbContext.Candidates.Update(candidate);
+                await _dbContext.SaveChangesAsync();
+                
                 _logger.LogInformation("Candidate soft deleted successfully: {CandidateId}, DeletedAt: {DeletedAt}",
                     id, candidate.DeletedAt);
+
+                // Update candidate in Azure Search index (mark as deleted)
+                await _azureSearchService.UpdateCandidateIndexAsync(candidate);
+                
                 return true;
             }
             catch (Exception ex)
@@ -181,24 +202,52 @@ namespace HRSystem.API.Repositories
         {
             try
             {
-                _logger.LogInformation("Searching candidates in database. Query: '{Query}', Page: {Page}, Size: {Size}",
+                _logger.LogInformation("Searching candidates with Azure Search. Query: '{Query}', Page: {Page}, Size: {Size}",
                     query, page, size);
+
+                // Use Azure Search for full-text search including resume content
+                var (items, totalCount) = await _azureSearchService.SearchCandidatesAsync(query, page, size);
+
+                _logger.LogInformation("Search completed using Azure Search. Query: '{Query}', Found: {Count} candidates", 
+                    query, totalCount);
+                
+                return (items, totalCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching candidates with Azure Search. Query: '{Query}'. Falling back to SQL search.", query);
+                
+                // Fallback to SQL search if Azure Search fails
+                return await SearchWithSqlFallbackAsync(query, page, size);
+            }
+        }
+
+        private async Task<(IEnumerable<Candidate> Items, int TotalCount)> SearchWithSqlFallbackAsync(string query, int page, int size)
+        {
+            try
+            {
+                _logger.LogWarning("Using SQL fallback search. Query: '{Query}'", query);
+                
                 var normalizedQuery = query?.Trim().ToLower();
-                var candidatesQuery = dbContext.Candidates
+                var candidatesQuery = _dbContext.Candidates
                     .Where(c => c.DeletedAt == null &&
                         (c.Fullname.ToLower().Contains(normalizedQuery) || c.Email.ToLower().Contains(normalizedQuery)));
+                
                 var totalCount = await candidatesQuery.CountAsync();
                 var items = await candidatesQuery
                     .OrderBy(c => c.Fullname)
                     .Skip((page - 1) * size)
                     .Take(size)
                     .ToListAsync();
-                _logger.LogInformation("Search completed. Query: '{Query}', Found: {Count} candidates", query, totalCount);
+                
+                _logger.LogInformation("SQL fallback search completed. Query: '{Query}', Found: {Count} candidates", 
+                    query, totalCount);
+                
                 return (items, totalCount);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error searching candidates in database. Query: '{Query}'", query);
+                _logger.LogError(ex, "Error in SQL fallback search. Query: '{Query}'", query);
                 throw;
             }
         }

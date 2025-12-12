@@ -16,14 +16,14 @@ namespace HRSystem.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ILogger<UsersController> _logger;
-        private readonly IUserRepository userRepository;
-        private readonly IMapper mapper;
+        private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
 
         public UsersController(ILogger<UsersController> logger, IUserRepository userRepository, IMapper mapper)
         {
             _logger = logger;
-            this.userRepository = userRepository;
-            this.mapper = mapper;
+            _userRepository = userRepository;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -33,8 +33,8 @@ namespace HRSystem.API.Controllers
             try
             {
                 _logger.LogInformation("Retrieving all users. Page: {Page}, Size: {Size}", p, size);
-                var (pagedUsers, totalCount) = await userRepository.GetAllAsync(p, size);
-                var userDtos = mapper.Map<List<UserDto>>(pagedUsers);
+                var (pagedUsers, totalCount) = await _userRepository.GetAllAsync(p, size);
+                var userDtos = _mapper.Map<List<UserDto>>(pagedUsers);
                 _logger.LogInformation("Successfully retrieved {Count} users out of {TotalCount}", userDtos.Count, totalCount);
                 return Ok(new
                 {
@@ -57,14 +57,14 @@ namespace HRSystem.API.Controllers
         {
             try
             {
-                _logger.LogInformation("Retrieving user: {UserId}", id);
-                var userEntity = await userRepository.GetByIdAsync(id);
+                _logger.LogInformation("Retrieving user by ID: {UserId}", id);
+                var userEntity = await _userRepository.GetByIdAsync(id);
                 if (userEntity == null)
                 {
                     _logger.LogWarning("User not found: {UserId}", id);
                     return NotFound();
                 }
-                var userDto = mapper.Map<UserDto>(userEntity);
+                var userDto = _mapper.Map<UserDto>(userEntity);
                 _logger.LogInformation("Successfully retrieved user: {UserId}, Email: {Email}", id, userDto.Email);
                 return Ok(userDto);
             }
@@ -105,7 +105,7 @@ namespace HRSystem.API.Controllers
             try
             {
                 _logger.LogInformation("Deleting user: {UserId}", id);
-                var deletedUser = await userRepository.DeleteAsync(id);
+                var deletedUser = await _userRepository.DeleteAsync(id);
                 if (!deletedUser)
                 {
                     _logger.LogWarning("User not found for deletion: {UserId}", id);

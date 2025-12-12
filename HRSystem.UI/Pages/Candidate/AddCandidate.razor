@@ -2,40 +2,86 @@
 @inject ICandidateService CandidateService
 @inject NavigationManager Navigation
 
-<div class="container mt-5">
+<div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h3 class="mb-0">Add Candidate</h3>
-                </div>
-                <div class="card-body">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-4">
+                <button class="btn btn-outline-secondary me-3" @onclick="NavigateBack">
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+                <h2 class="mb-0">Add New Candidate</h2>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
                     <EditForm Model="@addCandidateModel" OnValidSubmit="HandleAddCandidate">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <InputText class="form-control" @bind-Value="addCandidateModel.Fullname" placeholder="Full Name" />
+                        <DataAnnotationsValidator />
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <h5 class="text-muted mb-3 text-uppercase small fw-bold">Personal Information</h5>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <InputText class="form-control" @bind-Value="addCandidateModel.Email" placeholder="Email" />
+                            
+                            <div class="col-md-12">
+                                <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                <InputText class="form-control" @bind-Value="addCandidateModel.Fullname" placeholder="e.g. John Doe" />
+                                <ValidationMessage For="@(() => addCandidateModel.Fullname)" />
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <InputText class="form-control" @bind-Value="addCandidateModel.Phone" placeholder="Phone" />
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <InputText class="form-control" @bind-Value="addCandidateModel.Email" placeholder="e.g. john@example.com" />
+                                <ValidationMessage For="@(() => addCandidateModel.Email)" />
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <InputFile class="form-control" OnChange="HandleFileChange" accept="application/pdf" />
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <InputText class="form-control" @bind-Value="addCandidateModel.Phone" placeholder="e.g. +1 234 567 890" />
+                                <ValidationMessage For="@(() => addCandidateModel.Phone)" />
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <h5 class="text-muted mb-3 text-uppercase small fw-bold">Documents</h5>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Resume (PDF) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <InputFile class="form-control" OnChange="HandleFileChange" accept="application/pdf" />
+                                    <span class="input-group-text"><i class="bi bi-file-earmark-pdf"></i></span>
+                                </div>
                                 @if (!string.IsNullOrEmpty(fileErrorMessage))
                                 {
-                                    <div class="text-danger mt-1">@fileErrorMessage</div>
+                                    <div class="text-danger small mt-1">@fileErrorMessage</div>
                                 }
+                                <div class="form-text">Max file size: 5MB. Only PDF files are allowed.</div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-success w-100">Add</button>
-                        <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateBack">Cancel</button>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger mt-4 d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>@errorMessage</div>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button type="button" class="btn btn-light" @onclick="NavigateBack">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-lg me-2"></i>
+                                    <span>Save Candidate</span>
+                                }
+                            </button>
+                        </div>
                     </EditForm>
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="alert alert-danger mt-3">@errorMessage</div>
-                    }
                 </div>
             </div>
         </div>
@@ -47,6 +93,7 @@
     private IBrowserFile addResumeFile;
     private string errorMessage;
     private string fileErrorMessage;
+    private bool isSubmitting = false;
 
     private void HandleFileChange(InputFileChangeEventArgs e)
     {
@@ -58,6 +105,15 @@
             addResumeFile = null;
             return;
         }
+        
+        // Check file size (e.g., 5MB limit)
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            fileErrorMessage = "File size exceeds the 5MB limit.";
+            addResumeFile = null;
+            return;
+        }
+
         if (file.ContentType != "application/pdf")
         {
             fileErrorMessage = "Only PDF files are allowed.";
@@ -69,20 +125,35 @@
 
     private async Task HandleAddCandidate()
     {
+        if (isSubmitting) return;
+
         errorMessage = string.Empty;
         if (addResumeFile == null)
         {
-            errorMessage = "Please select a valid PDF file.";
+            fileErrorMessage = "Please select a valid PDF file.";
             return;
         }
-        var success = await CandidateService.AddAsync(addCandidateModel, addResumeFile);
-        if (success)
+
+        try
         {
-            Navigation.NavigateTo("/candidates");
+            isSubmitting = true;
+            var success = await CandidateService.AddAsync(addCandidateModel, addResumeFile);
+            if (success)
+            {
+                Navigation.NavigateTo("/candidates");
+            }
+            else
+            {
+                errorMessage = "Failed to add candidate. Please try again.";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            errorMessage = "Failed to add candidate.";
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 

@@ -12,32 +12,32 @@ namespace HRSystem.UI.Services
 {
     public class InterviewService : IInterviewService
     {
-        private readonly HttpClient httpClient;
-        private readonly ITokenService tokenService;
+        private readonly HttpClient _httpClient;
+        private readonly ITokenService _tokenService;
         private readonly ILogger<InterviewService> _logger;
 
         public InterviewService(HttpClient httpClient, ITokenService tokenService, ILogger<InterviewService> logger)
         {
-            this.httpClient = httpClient;
-            this.tokenService = tokenService;
+            _httpClient = httpClient;
+            _tokenService = tokenService;
             _logger = logger;
         }
 
-        public async Task<List<InterviewDto>> GetAllAsync(int page = 1, int size = 10)
+        public async Task<PagedResult<InterviewDto>> GetAllAsync(int page = 1, int size = 10)
         {
             try
             {
                 _logger.LogInformation("Fetching interviews from API. Page: {Page}, Size: {Size}", page, size);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.GetAsync($"api/Interviews?p={page}&size={size}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.GetAsync($"api/Interviews?p={page}&size={size}");
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to fetch interviews. Status: {StatusCode}", response.StatusCode);
-                    return new List<InterviewDto>();
+                    return new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
                 _logger.LogInformation("Successfully retrieved {Count} interviews", result?.Items?.Count ?? 0);
-                return result?.Items ?? new List<InterviewDto>();
+                return result ?? new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
             }
             catch (Exception ex)
             {
@@ -51,8 +51,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Fetching interview from API: {InterviewId}", id);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var interviewDto = await httpClient.GetFromJsonAsync<InterviewDto>($"api/Interviews/{id}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var interviewDto = await _httpClient.GetFromJsonAsync<InterviewDto>($"api/Interviews/{id}");
                 _logger.LogInformation("Successfully retrieved interview: {InterviewId}", id);
                 return interviewDto;
             }
@@ -69,7 +69,7 @@ namespace HRSystem.UI.Services
             {
                 _logger.LogInformation("Creating interview. Candidate: {CandidateId}, Job: {Job}, HasRecording: {HasRecording}",
                     dto.CandidateId, dto.Job, recordingFile != null);
-                await tokenService.ApplyTokenAsync(httpClient);
+                await _tokenService.ApplyTokenAsync(_httpClient);
                 using var form = new MultipartFormDataContent();
                 form.Add(new StringContent(dto.Job ?? string.Empty), nameof(dto.Job));
                 form.Add(new StringContent(dto.CandidateId.ToString()), nameof(dto.CandidateId));
@@ -90,7 +90,7 @@ namespace HRSystem.UI.Services
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recordingFile.ContentType);
                     form.Add(fileContent, "Recording", recordingFile.Name);
                 }
-                var response = await httpClient.PostAsync("api/Interviews", form);
+                var response = await _httpClient.PostAsync("api/Interviews", form);
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully created interview for candidate: {CandidateId}", dto.CandidateId);
@@ -114,7 +114,7 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Updating interview: {InterviewId}, HasNewRecording: {HasRecording}", id, recordingFile != null);
-                await tokenService.ApplyTokenAsync(httpClient);
+                await _tokenService.ApplyTokenAsync(_httpClient);
                 var content = new MultipartFormDataContent();
                 content.Add(new StringContent(dto.Job ?? string.Empty), "Job");
                 content.Add(new StringContent(dto.CandidateId.ToString()), "CandidateId");
@@ -134,7 +134,7 @@ namespace HRSystem.UI.Services
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(recordingFile.ContentType);
                     content.Add(fileContent, "Recording", recordingFile.Name);
                 }
-                var response = await httpClient.PutAsync($"api/Interviews/{id}", content);
+                var response = await _httpClient.PutAsync($"api/Interviews/{id}", content);
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully updated interview: {InterviewId}", id);
@@ -157,8 +157,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Deleting interview: {InterviewId}", id);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.DeleteAsync($"api/Interviews/{id}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.DeleteAsync($"api/Interviews/{id}");
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Successfully deleted interview: {InterviewId}", id);
@@ -181,8 +181,8 @@ namespace HRSystem.UI.Services
             try
             {
                 _logger.LogInformation("Searching interviews. Query: '{Query}', Page: {Page}, Size: {Size}", query, page, size);
-                await tokenService.ApplyTokenAsync(httpClient);
-                var response = await httpClient.GetAsync($"api/Interviews/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
+                await _tokenService.ApplyTokenAsync(_httpClient);
+                var response = await _httpClient.GetAsync($"api/Interviews/search?query={Uri.EscapeDataString(query)}&p={page}&size={size}");
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to search interviews. Status: {StatusCode}", response.StatusCode);

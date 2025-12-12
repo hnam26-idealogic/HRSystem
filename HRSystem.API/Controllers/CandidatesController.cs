@@ -20,15 +20,15 @@ namespace HRSystem.API.Controllers
         private readonly ILogger<CandidatesController> _logger;
         static readonly string[] scopeRequiredByApi = new string[] { "access_as_user" };
 
-        private readonly ICandidateRepository candidateRepository;
-        private readonly IFileStorageService fileStorageService;
-        private readonly IMapper mapper;
+        private readonly ICandidateRepository _candidateRepository;
+        private readonly IFileStorageService _fileStorageService;
+        private readonly IMapper _mapper;
 
         public CandidatesController(ICandidateRepository candidateRepository, IFileStorageService fileStorageService, IMapper mapper, ILogger<CandidatesController> logger)
         {
-            this.candidateRepository = candidateRepository;
-            this.fileStorageService = fileStorageService;
-            this.mapper = mapper;
+            _candidateRepository = candidateRepository;
+            _fileStorageService = fileStorageService;
+            _mapper = mapper;
             _logger = logger;
         }
 
@@ -39,8 +39,8 @@ namespace HRSystem.API.Controllers
             _logger.LogInformation("Getting all candidates, page: {Page}, size: {Size}", p, size);
             HttpContext.VerifyUserHasAnyAcceptedScope(scopeRequiredByApi);
 
-            var (pagedCandidates, totalCount) = await candidateRepository.GetAllAsync(p, size);
-            var candidateDtos = mapper.Map<List<CandidateDto>>(pagedCandidates);
+            var (pagedCandidates, totalCount) = await _candidateRepository.GetAllAsync(p, size);
+            var candidateDtos = _mapper.Map<List<CandidateDto>>(pagedCandidates);
             return Ok(new
             {
                 TotalCount = totalCount,
@@ -55,13 +55,13 @@ namespace HRSystem.API.Controllers
         public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             _logger.LogInformation("Getting candidate by ID: {Id}", id);
-            var candidate = await candidateRepository.GetByIdAsync(id);
+            var candidate = await _candidateRepository.GetByIdAsync(id);
             if (candidate == null) 
             {
                 _logger.LogWarning("Candidate not found with ID: {Id}", id);
                 return NotFound();
             }
-            return Ok(mapper.Map<CandidateDto>(candidate));
+            return Ok(_mapper.Map<CandidateDto>(candidate));
         }
 
         [HttpGet("{id:Guid}/resume-url")]
@@ -69,14 +69,14 @@ namespace HRSystem.API.Controllers
         public async Task<IActionResult> GetResumeUrl([FromRoute] Guid id)
         {
             _logger.LogInformation("Getting resume URL for candidate ID: {Id}", id);
-            var candidate = await candidateRepository.GetByIdAsync(id);
+            var candidate = await _candidateRepository.GetByIdAsync(id);
             if (candidate == null || string.IsNullOrEmpty(candidate.ResumePath))
             {
                 _logger.LogWarning("Candidate or resume not found for ID: {Id}", id);
                 return NotFound();
             }
 
-            var sasUrl = fileStorageService.GetBlobSasUrl(candidate.ResumePath, 10); // 10 min expiry
+            var sasUrl = _fileStorageService.GetBlobSasUrl(candidate.ResumePath, 10); // 10 min expiry
             _logger.LogInformation("Generated resume SAS URL for candidate ID: {Id}", id);
             return Ok(sasUrl);
         }
@@ -88,7 +88,7 @@ namespace HRSystem.API.Controllers
         {
             _logger.LogInformation("Adding a new candidate with email: {Email}", addCandidateRequestDto.Email);
             // Check if email exists
-            var existingCandidate = await candidateRepository.GetByEmailAsync(addCandidateRequestDto.Email);
+            var existingCandidate = await _candidateRepository.GetByEmailAsync(addCandidateRequestDto.Email);
             if (existingCandidate != null)
             {
                 _logger.LogWarning("Attempt to add a candidate with an existing email: {Email}", addCandidateRequestDto.Email);
@@ -98,13 +98,13 @@ namespace HRSystem.API.Controllers
 
             // Resume validation is handled by [Required] attribute
 
-            var candidateEntity = mapper.Map<Candidate>(addCandidateRequestDto);
+            var candidateEntity = _mapper.Map<Candidate>(addCandidateRequestDto);
 
-            var (resumeBlobName, _) = await fileStorageService.UploadAsync(addCandidateRequestDto.Resume!);
+            var (resumeBlobName, _) = await _fileStorageService.UploadAsync(addCandidateRequestDto.Resume!);
             candidateEntity.ResumePath = resumeBlobName;
 
-            var createdCandidate = await candidateRepository.AddAsync(candidateEntity);
-            var createdCandidateDto = mapper.Map<CandidateDto>(createdCandidate);
+            var createdCandidate = await _candidateRepository.AddAsync(candidateEntity);
+            var createdCandidateDto = _mapper.Map<CandidateDto>(createdCandidate);
             _logger.LogInformation("Added new candidate with ID: {Id}", createdCandidateDto.Id);
             return CreatedAtAction(nameof(GetById), new { id = createdCandidateDto.Id }, createdCandidateDto);
         }
@@ -123,13 +123,13 @@ namespace HRSystem.API.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            var candidateEntity = mapper.Map<Candidate>(updateCandidateRequestDto);
+            var candidateEntity = _mapper.Map<Candidate>(updateCandidateRequestDto);
 
-            var (resumePath, _) = await fileStorageService.UploadAsync(updateCandidateRequestDto.Resume!);
+            var (resumePath, _) = await _fileStorageService.UploadAsync(updateCandidateRequestDto.Resume!);
             candidateEntity.ResumePath = resumePath;
 
-            var updatedCandidate = await candidateRepository.UpdateAsync(id, candidateEntity);
-            var updatedCandidateDto = mapper.Map<CandidateDto>(updatedCandidate);
+            var updatedCandidate = await _candidateRepository.UpdateAsync(id, candidateEntity);
+            var updatedCandidateDto = _mapper.Map<CandidateDto>(updatedCandidate);
             _logger.LogInformation("Updated candidate ID: {Id}", id);
             return Ok(updatedCandidateDto);
         }
@@ -139,7 +139,7 @@ namespace HRSystem.API.Controllers
         public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             _logger.LogInformation("Deleting candidate ID: {Id}", id);
-            var deleted = await candidateRepository.DeleteAsync(id);
+            var deleted = await _candidateRepository.DeleteAsync(id);
             if (!deleted) 
             {
                 _logger.LogWarning("Candidate not found for deletion with ID: {Id}", id);
@@ -154,8 +154,8 @@ namespace HRSystem.API.Controllers
         public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] int p = 1, [FromQuery] int size = 10)
         {
             _logger.LogInformation("Searching candidates with query: {Query}, page: {Page}, size: {Size}", query, p, size);
-            var (candidates, totalCount) = await candidateRepository.SearchAsync(query, p, size);
-            var candidateDtos = mapper.Map<List<CandidateDto>>(candidates);
+            var (candidates, totalCount) = await _candidateRepository.SearchAsync(query, p, size);
+            var candidateDtos = _mapper.Map<List<CandidateDto>>(candidates);
             return Ok(new
             {
                 TotalCount = totalCount,

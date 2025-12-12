@@ -6,26 +6,26 @@ namespace HRSystem.UI.Services
 {
     public class JwtTokenService : ITokenService
     {
-        private readonly IJSRuntime js;
+        private readonly IJSRuntime _js;
 
         public JwtTokenService(IJSRuntime js)
         {
-            this.js = js;
+            _js = js;
         }
 
         public async Task SetTokenAsync(string token)
         {
-            await js.InvokeVoidAsync("localStorage.setItem", "jwtToken", token);
+            await _js.InvokeVoidAsync("localStorage.setItem", "jwtToken", token);
         }
 
         public async Task<string> GetTokenAsync()
         {
-            return await js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
+            return await _js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
         }
 
         public async Task RemoveTokenAsync()
         {
-            await js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
+            await _js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
         }
 
         public async Task ApplyTokenAsync(HttpClient httpClient)

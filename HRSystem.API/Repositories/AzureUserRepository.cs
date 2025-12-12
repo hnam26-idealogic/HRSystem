@@ -11,7 +11,7 @@ namespace HRSystem.API.Repositories
     {
         private readonly Microsoft.Graph.GraphServiceClient _graphServiceClient;
         private readonly IConfiguration _configuration;
-        private readonly ConvertAppRolesHelper convertAppRolesHelper;
+        private readonly ConvertAppRolesHelper _convertAppRolesHelper;
         private readonly ILogger<AzureUserRepository> _logger;
 
         public AzureUserRepository(
@@ -20,9 +20,9 @@ namespace HRSystem.API.Repositories
             ConvertAppRolesHelper convertAppRolesHelper,
             ILogger<AzureUserRepository> logger)
         {
-            this._graphServiceClient = graphServiceClient;
-            this._configuration = configuration;
-            this.convertAppRolesHelper = convertAppRolesHelper;
+            _graphServiceClient = graphServiceClient;
+            _configuration = configuration;
+            _convertAppRolesHelper = convertAppRolesHelper;
             _logger = logger;
         }
 
@@ -43,7 +43,7 @@ namespace HRSystem.API.Repositories
             try
             {
                 _logger.LogInformation("Retrieving users from Microsoft Graph API. Page: {Page}, Size: {Size}", page, size);
-                var appRoleMap = await convertAppRolesHelper.LoadAppRoleMapAsync(_configuration["AzureAd:ClientId"]);
+                var appRoleMap = await _convertAppRolesHelper.LoadAppRoleMapAsync(_configuration["AzureAd:ClientId"]);
 
                 var usersPage = await _graphServiceClient.Users
                     .Request()
@@ -98,8 +98,8 @@ namespace HRSystem.API.Repositories
         {
             try
             {
-                _logger.LogInformation("Retrieving user from Microsoft Graph API by email: {Email}", email);
-                var appRoleMap = await convertAppRolesHelper.LoadAppRoleMapAsync(_configuration["AzureAd:ClientId"]);
+                _logger.LogInformation("Retrieving user by email from Graph API: {Email}", email);
+                var appRoleMap = await _convertAppRolesHelper.LoadAppRoleMapAsync(_configuration["AzureAd:ClientId"]);
 
                 var u = await _graphServiceClient.Users[email]
                     .Request()
@@ -144,8 +144,8 @@ namespace HRSystem.API.Repositories
         {
             try
             {
-                _logger.LogInformation("Retrieving user from Microsoft Graph API by ID: {UserId}", id);
-                var appRoleMap = await convertAppRolesHelper.LoadAppRoleMapAsync(_configuration["AzureAd:ClientId"]);
+                _logger.LogInformation("Retrieving user by ID from Graph API: {UserId}", id);
+                var appRoleMap = await _convertAppRolesHelper.LoadAppRoleMapAsync(_configuration["AzureAd:ClientId"]);
 
                 var u = await _graphServiceClient.Users[id.ToString()]
                     .Request()
@@ -191,7 +191,7 @@ namespace HRSystem.API.Repositories
             return GetByEmailAsync(username);
         }
 
-        public Task<Models.Domain.User> UpdateAsync(Guid id, Models.Domain.User user)
+        public Task<Models.Domain.User?> UpdateAsync(Guid id, Models.Domain.User user)
         {
             _logger.LogWarning("UpdateAsync called on AzureUserRepository (not supported). UserId: {UserId}", id);
             throw new NotSupportedException();
