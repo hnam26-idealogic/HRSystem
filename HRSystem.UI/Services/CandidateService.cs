@@ -21,7 +21,7 @@ namespace HRSystem.UI.Services
             _logger = logger;
         }
 
-        public async Task<PagedResult<CandidateDto>> GetAllAsync(int page = 1, int size = 10)
+        public async Task<List<CandidateDto>> GetAllAsync(int page = 1, int size = 10)
         {
             try
             {
@@ -31,11 +31,11 @@ namespace HRSystem.UI.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to fetch candidates. Status: {StatusCode}", response.StatusCode);
-                    return new PagedResult<CandidateDto>();
+                    return new List<CandidateDto>();
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
                 _logger.LogInformation("Successfully retrieved {Count} candidates", result?.Items?.Count ?? 0);
-                return result ?? new PagedResult<CandidateDto>();
+                return result?.Items ?? new List<CandidateDto>();
             }
             catch (Exception ex)
             {
@@ -154,7 +154,7 @@ namespace HRSystem.UI.Services
             }
         }
 
-        public async Task<PagedResult<CandidateDto>> SearchAsync(string query, int page = 1, int size = 10)
+        public async Task<List<CandidateDto>> SearchAsync(string query, int page = 1, int size = 10)
         {
             try
             {
@@ -164,11 +164,11 @@ namespace HRSystem.UI.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to search candidates. Status: {StatusCode}", response.StatusCode);
-                    return new PagedResult<CandidateDto>();
+                    return new List<CandidateDto>();
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<CandidateDto>>();
                 _logger.LogInformation("Search completed. Found {Count} candidates", result?.Items?.Count ?? 0);
-                return result ?? new PagedResult<CandidateDto>();
+                return result?.Items ?? new List<CandidateDto>();
             }
             catch (Exception ex)
             {

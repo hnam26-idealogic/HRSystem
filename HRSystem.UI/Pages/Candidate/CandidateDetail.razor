@@ -2,136 +2,51 @@
 @inject ICandidateService CandidateService
 @inject NavigationManager Navigation
 
-<div class="container mt-4">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="d-flex align-items-center mb-4">
-                <button class="btn btn-outline-secondary me-3" @onclick="NavigateBack">
-                    <i class="bi bi-arrow-left"></i> Back
-                </button>
-                <h2 class="mb-0">Candidate Profile</h2>
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Candidate Details</h3>
+                </div>
+                <div class="card-body">
+                    @if (candidate == null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span class="ms-2">Loading...</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <dl class="row">
+                            <dt class="col-sm-4">Full Name</dt>
+                            <dd class="col-sm-8">@candidate.Fullname</dd>
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@candidate.Email</dd>
+                            <dt class="col-sm-4">Phone</dt>
+                            <dd class="col-sm-8">@candidate.Phone</dd>
+                            <dt class="col-sm-4">Resume</dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(resumeUrl))
+                                {
+                                    <a class="btn btn-outline-primary btn-sm me-1" href="@resumeUrl" target="_blank">
+                                        <i class="bi bi-eye"></i> View Resume
+                                    </a>
+                                    <a class="btn btn-outline-success btn-sm" href="@resumeUrl" download>
+                                        <i class="bi bi-download"></i> Download Resume
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No resume uploaded</span>
+                                }
+                            </dd>
+                        </dl>
+                        <button class="btn btn-secondary mt-3" @onclick="NavigateBack">Back</button>
+                    }
+                </div>
             </div>
-
-            @if (isLoading)
-            {
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2 text-muted">Loading profile...</p>
-                </div>
-            }
-            else if (candidate == null)
-            {
-                <div class="alert alert-warning">
-                    Candidate not found.
-                </div>
-            }
-            else
-            {
-                <div class="card shadow-sm border-0 overflow-hidden">
-                    <div class="card-header bg-primary text-white p-4">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold display-5 me-4 shadow-sm" 
-                                 style="width: 80px; height: 80px;">
-                                @GetInitials(candidate.Fullname)
-                            </div>
-                            <div>
-                                <h3 class="mb-1 text-white">@candidate.Fullname</h3>
-                                <div class="opacity-75">
-                                    <i class="bi bi-envelope me-2"></i>@candidate.Email
-                                </div>
-                            </div>
-                            <div class="ms-auto">
-                                <button class="btn btn-light text-primary" @onclick="NavigateToEdit">
-                                    <i class="bi bi-pencil me-2"></i>Edit Profile
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <h5 class="text-muted mb-3 text-uppercase small fw-bold">Contact Information</h5>
-                                <div class="mb-3">
-                                    <label class="text-muted small d-block">Phone Number</label>
-                                    <div class="fs-5">
-                                        @if (!string.IsNullOrEmpty(candidate.Phone))
-                                        {
-                                            <a href="tel:@candidate.Phone" class="text-decoration-none text-body">
-                                                <i class="bi bi-telephone me-2 text-primary"></i>@candidate.Phone
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted fst-italic">Not provided</span>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="text-muted small d-block">Email Address</label>
-                                    <div class="fs-5">
-                                        <a href="mailto:@candidate.Email" class="text-decoration-none text-body">
-                                            <i class="bi bi-envelope me-2 text-primary"></i>@candidate.Email
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <h5 class="text-muted mb-3 text-uppercase small fw-bold">Documents</h5>
-                                <div class="card bg-light border-0">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <i class="bi bi-file-earmark-person fs-3 text-primary me-3"></i>
-                                            <div>
-                                                <h6 class="mb-0">Resume / CV</h6>
-                                                <small class="text-muted">
-                                                    @(string.IsNullOrEmpty(candidate.ResumePath) ? "No document uploaded" : "PDF Document")
-                                                </small>
-                                            </div>
-                                        </div>
-                                        
-                                        @if (!string.IsNullOrEmpty(resumeUrl))
-                                        {
-                                            <div class="d-grid gap-2">
-                                                <a href="@resumeUrl" target="_blank" class="btn btn-outline-primary btn-sm">
-                                                    <i class="bi bi-eye me-2"></i>View Document
-                                                </a>
-                                                <a href="@resumeUrl" download class="btn btn-outline-secondary btn-sm">
-                                                    <i class="bi bi-download me-2"></i>Download
-                                                </a>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="text-center text-muted small py-2">
-                                                No resume available
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <hr class="my-4" />
-                        
-                        <div class="row">
-                            <div class="col-12">
-                                <h5 class="text-muted mb-3 text-uppercase small fw-bold">System Information</h5>
-                                <div class="d-flex gap-5">
-                                    <div>
-                                        <label class="text-muted small d-block">Added On</label>
-                                        <span>@candidate.CreatedAt.ToLongDateString()</span>
-                                    </div>
-                                    <div>
-                                        <label class="text-muted small d-block">Candidate ID</label>
-                                        <span class="font-monospace text-muted">@candidate.Id</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
         </div>
     </div>
 </div>
@@ -140,40 +55,18 @@
     [Parameter] public Guid Id { get; set; }
     private HRSystem.UI.DTOs.CandidateDto candidate;
     private string resumeUrl;
-    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        try 
+        candidate = await CandidateService.GetByIdAsync(Id);
+        if (!string.IsNullOrEmpty(candidate.ResumePath))
         {
-            isLoading = true;
-            candidate = await CandidateService.GetByIdAsync(Id);
-            if (candidate != null && !string.IsNullOrEmpty(candidate.ResumePath))
-            {
-                resumeUrl = await CandidateService.GetResumeUrlAsync(Id);
-            }
-        }
-        finally
-        {
-            isLoading = false;
+            resumeUrl = await CandidateService.GetResumeUrlAsync(Id);
         }
     }
 
     private void NavigateBack()
     {
         Navigation.NavigateTo("/candidates");
-    }
-
-    private void NavigateToEdit()
-    {
-        Navigation.NavigateTo($"/candidates/edit/{Id}");
-    }
-
-    private string GetInitials(string fullname)
-    {
-        if (string.IsNullOrWhiteSpace(fullname)) return "?";
-        var parts = fullname.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
-        return $"{parts[0][0]}{parts[parts.Length - 1][0]}".ToUpper();
     }
 }

@@ -23,7 +23,7 @@ namespace HRSystem.UI.Services
             _logger = logger;
         }
 
-        public async Task<PagedResult<InterviewDto>> GetAllAsync(int page = 1, int size = 10)
+        public async Task<List<InterviewDto>> GetAllAsync(int page = 1, int size = 10)
         {
             try
             {
@@ -33,11 +33,11 @@ namespace HRSystem.UI.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to fetch interviews. Status: {StatusCode}", response.StatusCode);
-                    return new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
+                    return new List<InterviewDto>();
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
                 _logger.LogInformation("Successfully retrieved {Count} interviews", result?.Items?.Count ?? 0);
-                return result ?? new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
+                return result?.Items ?? new List<InterviewDto>();
             }
             catch (Exception ex)
             {
@@ -176,7 +176,7 @@ namespace HRSystem.UI.Services
             }
         }
 
-        public async Task<PagedResult<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10)
+        public async Task<List<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10)
         {
             try
             {
@@ -186,11 +186,11 @@ namespace HRSystem.UI.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to search interviews. Status: {StatusCode}", response.StatusCode);
-                    return new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
+                    return new List<InterviewDto>();
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
                 _logger.LogInformation("Search completed. Found {Count} interviews", result?.Items?.Count ?? 0);
-                return result ?? new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
+                return result?.Items ?? new List<InterviewDto>();
             }
             catch (Exception ex)
             {

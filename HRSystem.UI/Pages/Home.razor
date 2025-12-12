@@ -1,58 +1,7 @@
 ﻿@page "/"
-@inject NavigationManager Navigation
 
-<PageTitle>HR System - Dashboard</PageTitle>
+<PageTitle>Home</PageTitle>
 
-<div class="container mt-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary">Welcome to HR System</h1>
-        <p class="lead text-muted">Manage your recruitment process efficiently</p>
-    </div>
+<h1>Hello, world!</h1>
 
-    <div class="row g-4 justify-content-center">
-        <div class="col-md-5 col-lg-4">
-            <div class="card h-100 shadow-sm border-0 hover-shadow transition-all" style="cursor: pointer;" @onclick='() => Navigation.NavigateTo("/candidates")'>
-                <div class="card-body text-center p-5">
-                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-4 mb-4">
-                        <i class="bi bi-people-fill text-primary display-4"></i>
-                    </div>
-                    <h3 class="card-title h4">Candidates</h3>
-                    <p class="card-text text-muted">Manage candidate profiles, resumes, and application status.</p>
-                    <button class="btn btn-outline-primary mt-3">View Candidates</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-5 col-lg-4">
-            <div class="card h-100 shadow-sm border-0 hover-shadow transition-all" style="cursor: pointer;" @onclick='() => Navigation.NavigateTo("/interviews")'>
-                <div class="card-body text-center p-5">
-                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-4 mb-4">
-                        <i class="bi bi-calendar-check-fill text-success display-4"></i>
-                    </div>
-                    <h3 class="card-title h4">Interviews</h3>
-                    <p class="card-text text-muted">Schedule and track interviews, feedback, and outcomes.</p>
-                    <button class="btn btn-outline-success mt-3">Manage Interviews</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row mt-5">
-        <div class="col-12 text-center">
-            <div class="alert alert-info d-inline-block">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                <span>System is running in <strong>Development</strong> mode.</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .hover-shadow:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-    }
-    .transition-all {
-        transition: all 0.3s ease;
-    }
-</style>
+Welcome to your new app.
