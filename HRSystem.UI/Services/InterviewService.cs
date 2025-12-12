@@ -176,7 +176,7 @@ namespace HRSystem.UI.Services
             }
         }
 
-        public async Task<List<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10)
+        public async Task<PagedResult<InterviewDto>> SearchAsync(string query, int page = 1, int size = 10)
         {
             try
             {
@@ -186,11 +186,11 @@ namespace HRSystem.UI.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to search interviews. Status: {StatusCode}", response.StatusCode);
-                    return new List<InterviewDto>();
+                    return new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
                 }
                 var result = await response.Content.ReadFromJsonAsync<PagedResult<InterviewDto>>();
                 _logger.LogInformation("Search completed. Found {Count} interviews", result?.Items?.Count ?? 0);
-                return result?.Items ?? new List<InterviewDto>();
+                return result ?? new PagedResult<InterviewDto> { Items = new List<InterviewDto>(), TotalCount = 0 };
             }
             catch (Exception ex)
             {
